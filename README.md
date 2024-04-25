@@ -72,7 +72,7 @@ MONGODB_PASSWORD= # MongoDB 密碼
 ```
 
 ## 資料夾說明
-
+- connections - 資料庫連接
 - controllers - 控制器放置處
 - interface - TypeScript 型別
 - middleware - API 攔截器

@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "ts-node-dev ./bin/www.ts"
+    "start": "ts-node-dev ./bin/www.ts",
+    "dev": "nodemon --watch * -e ts --exec ts-node ./bin/www.ts"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
