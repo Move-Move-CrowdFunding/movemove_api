@@ -1,0 +1,13 @@
+{
+  "eslint.codeActionsOnSave.rules": null,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "eslint.format.enable": true,
+"eslint.validate": [
+  "javascipt",
+  "typescript",
+  "javascriptreact",
+  "typescriptreact"
+]
+}
