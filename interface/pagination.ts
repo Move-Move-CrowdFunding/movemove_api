@@ -1,21 +1,14 @@
 interface paginationOption {
-  sort: {
-    [key:string]: any
-  },
-  filter: {
-    [key:string]: any
-  },
+  sort: Record<string, any>
+  filter: Record<string, any>
 }
 
 interface paginationReq {
   body: {
     pageSize: number
     pageNo: number
-  },
-  [key:string]: any
+  }
+  [key: string]: any
 }
 
-export {
-  paginationOption,
-  paginationReq
-}
+export type { paginationOption, paginationReq }

@@ -1,13 +1,13 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
 const schema = {}
 
 const option = {
-  versionKey: false,
+  versionKey: false
 }
 
-const  modelSchema = new mongoose.Schema(schema, option);
+const modelSchema = new mongoose.Schema(schema, option)
 
-const Track = mongoose.model('Track', modelSchema);
+const Track = mongoose.model('Track', modelSchema)
 
-export default Track;
+export default Track
