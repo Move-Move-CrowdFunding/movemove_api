@@ -4,90 +4,90 @@ const schema = {
   userId: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',
-    required: [true, '請輸入用戶id'],
+    required: [true, '請輸入用戶id']
   },
   introduce: {
     type: String,
-    default: '',
+    default: ''
   },
   teamName: {
     type: String,
-    required: [true, '請輸入提案人名稱/團隊名稱'],
+    required: [true, '請輸入提案人名稱/團隊名稱']
   },
   email: {
     type: String,
-    default: '',
+    default: ''
   },
   phone: {
     type: String,
-    default: '',
+    default: ''
   },
   title: {
     type: String,
-    required: [true, '請輸入提案標題'],
+    required: [true, '請輸入提案標題']
   },
   categoryKey: {
     type: String,
     required: [true, '請選擇提案分類'],
     enum: {
       values: ['1', '2', '3', '4', '5', '6'],
-      message: '提案類型錯誤',
-    },
+      message: '提案類型錯誤'
+    }
   },
   targetMoney: {
     type: Number,
-    required: [true, '請輸入提案目標'],
+    required: [true, '請輸入提案目標']
   },
   startDate: {
     type: Number,
-    required: [true, '請輸入提案開始日期'],
+    required: [true, '請輸入提案開始日期']
   },
   endDate: {
     type: Number,
-    required: [true, '請輸入提案截止日期'],
+    required: [true, '請輸入提案截止日期']
   },
   describe: {
     type: Number,
-    required: [true, '請輸入提案簡介'],
+    required: [true, '請輸入提案簡介']
   },
   coverUrl: {
     type: String,
-    required: [true, '請選擇提案封面'],
+    required: [true, '請選擇提案封面']
   },
   content: {
     type: String,
-    required: [true, '請輸入提案說明'],
+    required: [true, '請輸入提案說明']
   },
   videoUrl: {
     type: String,
-    default: '',
+    default: ''
   },
   relatedUrl: {
     type: String,
-    default: '',
+    default: ''
   },
   feedbackItem: {
     type: String,
-    default: '',
+    default: ''
   },
   feedbackUrl: {
     type: String,
-    default: '',
+    default: ''
   },
   feedbackMoney: {
     type: Number,
-    default: '',
+    default: ''
   },
   feedbackDate: {
     type: Number,
-    default: '',
+    default: ''
   },
   createTime: {
-    type: Number,
+    type: Number
   },
   updateTime: {
-    type: Number,
-  },
+    type: Number
+  }
 }
 
 const option = {
@@ -95,8 +95,8 @@ const option = {
   timestamps: {
     createdAt: 'createTime',
     updatedAt: 'updateTime',
-    currentTime: () => Math.floor(Date.now() / 1000),
-  },
+    currentTime: () => Math.floor(Date.now() / 1000)
+  }
 }
 
 const modelSchema = new mongoose.Schema(schema, option)
