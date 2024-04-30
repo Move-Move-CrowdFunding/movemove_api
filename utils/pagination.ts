@@ -1,5 +1,5 @@
 import type { paginationOption, paginationReq } from '../interface/pagination'
-import type { errorTask } from '../interface/error'
+import type { errorTask } from '../interface/errorTask'
 
 /**
  *

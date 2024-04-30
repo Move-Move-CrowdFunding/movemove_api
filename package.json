@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "start": "ts-node-dev ./bin/www.ts",
-    "dev": "nodemon --watch * -e ts --exec ts-node ./bin/www.ts",
+    "dev": "cross-env NODE_ENV=dev nodemon --watch * -e ts --exec ts-node ./bin/www.ts",
+    "production": "cross-env NODE_ENV=production nodemon --watch * -e ts --exec ts-node ./bin/www.ts",
     "lint": "eslint src/**/*.ts",
     "format": "eslint *.ts --fix"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
+    "cross-env": "^7.0.3",
     "debug": "~2.6.9",
     "dotenv": "^16.4.5",
     "express": "~4.16.1",
