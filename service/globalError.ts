@@ -7,7 +7,7 @@ import type errorTask from '../interface/errorTask'
  * @returns {errorTask} new Error
  */
 
-const globalError = (httpStatus: number, errMessage: string) => {
+const globalError = ({ httpStatus = 400, errMessage }: { httpStatus?: number; errMessage: string }) => {
   const error: errorTask = new Error(errMessage)
   error.httpStatus = httpStatus
   error.isOperational = true

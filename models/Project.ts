@@ -16,21 +16,21 @@ const schema = {
   },
   email: {
     type: String,
-    default: ''
+    required: [true, '請輸入聯絡信箱']
   },
   phone: {
     type: String,
-    default: ''
+    required: [true, '請輸入聯絡手機']
   },
   title: {
     type: String,
     required: [true, '請輸入提案標題']
   },
   categoryKey: {
-    type: String,
+    type: Number,
     required: [true, '請選擇提案分類'],
     enum: {
-      values: ['1', '2', '3', '4', '5', '6'],
+      values: [1, 2, 3, 4, 5, 6],
       message: '提案類型錯誤'
     }
   },
@@ -47,7 +47,7 @@ const schema = {
     required: [true, '請輸入提案截止日期']
   },
   describe: {
-    type: Number,
+    type: String,
     required: [true, '請輸入提案簡介']
   },
   coverUrl: {

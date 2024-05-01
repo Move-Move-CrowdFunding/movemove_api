@@ -1,13 +1,12 @@
-import express, { NextFunction } from 'express'
+import express, { NextFunction, Request, Response } from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 import connectDB from './connections/'
 import type errorTask from './interface/errorTask.ts'
-import { Request, Response } from 'express'
 import responseError from './service/responseError'
 
-// import projectRouter from './routes/project'
+import projectRouter from './routes/project'
 
 const app = express()
 
@@ -30,7 +29,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-// app.use('/api/v1/project', projectRouter)
+app.use('/api/v1/project', projectRouter)
 
 // 404 路由
 app.use((req: Request, res: Response) => {
