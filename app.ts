@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { NextFunction } from 'express'
 import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
@@ -7,8 +7,7 @@ import type errorTask from './interface/errorTask.ts'
 import { Request, Response } from 'express'
 import responseError from './service/responseError'
 
-import indexRouter from './routes/index'
-import usersRouter from './routes/users'
+// import projectRouter from './routes/project'
 
 const app = express()
 
@@ -31,8 +30,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 
-app.use('/', indexRouter)
-app.use('/users', usersRouter)
+// app.use('/api/v1/project', projectRouter)
 
 // 404 路由
 app.use((req: Request, res: Response) => {
@@ -43,7 +41,7 @@ app.use((req: Request, res: Response) => {
 })
 
 // next() 錯誤處理
-app.use((err: errorTask, req: Request, res: Response) => {
+app.use((err: errorTask, req: Request, res: Response, next: NextFunction) => {
   console.log('統一錯誤處理')
   console.log('當前環境為:', process.env.NODE_ENV)
   err.httpStatus = err.httpStatus || 500
@@ -56,15 +54,22 @@ app.use((err: errorTask, req: Request, res: Response) => {
   // 生產模式
   // 可預期錯誤
   if (err.name === 'ValidationError') {
-    // mongoose 驗證錯誤
     err.isOperational = true
-    err.message = '參數錯誤'
+
+    const errors = Object.values(err.errors)
+    const schemaError = errors.find((item: any) => item.name === 'ValidatorError')
+    if (errors.length && schemaError) {
+      // mongoose 驗證錯誤
+      err.message = (schemaError as Error).message
+    } else {
+      err.message = '參數錯誤'
+    }
     return responseError.error_production(err, res)
   }
 
   // 非預期錯誤
   responseError.error_production(err, res)
-
+  next()
   console.log('req', req)
   console.log('res', res)
 })
