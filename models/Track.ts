@@ -20,7 +20,12 @@ const schema = {
 }
 
 const option = {
-  versionKey: false
+  versionKey: false,
+  timestamps: {
+    createdAt: 'createTime',
+    updatedAt: 'updateTime',
+    currentTime: () => Math.floor(Date.now() / 1000)
+  }
 }
 
 const modelSchema = new mongoose.Schema(schema, option)
