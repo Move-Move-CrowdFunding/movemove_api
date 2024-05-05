@@ -8,7 +8,12 @@ import responseError from './service/responseError'
 
 import projectRouter from './routes/project'
 
+// Swagger 使用
+import swaggerUi from 'swagger-ui-express'
+import swaggerDocument from './swagger-output.json'
+
 const app = express()
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 // 出現預料外的錯誤
 process.on('uncaughtException', (err) => {

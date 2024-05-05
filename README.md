@@ -62,6 +62,17 @@ npm run start
 http://localhost:3000/
 ```
 
+### swagger 文件生成
+```bash
+npm run swagger
+```
+
+### 開啟文件
+#### 本地環境
+```bash
+http://localhost:3000/api-docs
+```
+
 ## 環境變數說明
 
 ```env
@@ -88,6 +99,7 @@ MONGODB_PASSWORD= # MongoDB 密碼
 - express v4.16.1
 - mongoose v8.3.2
 - typescript v5.4.5
+- swagger v2.23.7
 ...
 
 ## 第三方服務
