@@ -11,15 +11,169 @@
     "http",
     "https"
   ],
+  "securityDefinitions": {
+    "token": {
+      "type": "apiKey",
+      "in": "headers",
+      "name": "Authorization",
+      "description": "請填寫 token"
+    }
+  },
   "paths": {
-    "/api/v1/project/": {
+    "/project/": {
       "post": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
+        "tags": [
+          "Projects - 提案"
+        ],
+        "description": "發起提案",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "發起提案格式",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string",
+                  "example": "66378c5f9fb5b5e7c300e95c"
+                },
+                "introduce": {
+                  "type": "string",
+                  "example": "團隊介紹"
+                },
+                "teamName": {
+                  "type": "string",
+                  "example": "提案人姓名/團隊名稱"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "提案標題"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "聯絡信箱"
+                },
+                "categoryKey": {
+                  "type": "number",
+                  "example": 1
+                },
+                "phone": {
+                  "type": "string",
+                  "example": "連絡電話"
+                },
+                "targetMoney": {
+                  "type": "number",
+                  "example": 50000
+                },
+                "content": {
+                  "type": "string",
+                  "example": "<p>提案內容</p>"
+                },
+                "coverUrl": {
+                  "type": "string",
+                  "example": "https://fakeimg.pl/300/"
+                },
+                "describe": {
+                  "type": "string",
+                  "example": "提案簡介"
+                },
+                "videoUrl": {
+                  "type": "string",
+                  "example": "https://youtube.com/"
+                },
+                "startDate": {
+                  "type": "number",
+                  "example": 1678982400
+                },
+                "endDate": {
+                  "type": "number",
+                  "example": 1679846400
+                },
+                "relatedUrl": {
+                  "type": "string",
+                  "example": "https://www.google.com/"
+                },
+                "feedbackItem": {
+                  "type": "string",
+                  "example": "限量精美小熊維尼"
+                },
+                "feedbackUrl": {
+                  "type": "string",
+                  "example": "https://fakeimg.pl/300/"
+                },
+                "feedbackMoney": {
+                  "type": "number",
+                  "example": 100
+                },
+                "feedbackDate": {
+                  "type": "number",
+                  "example": 1682524800
+                }
+              },
+              "required": [
+                "userId",
+                "teamName",
+                "title",
+                "email",
+                "categoryKey",
+                "phone",
+                "targetMoney",
+                "content",
+                "coverUrl",
+                "describe",
+                "startDate",
+                "endDate"
+              ]
+            }
           }
-        }
+        ],
+        "responses": {
+          "200": {
+            "description": "發起提案成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "資料新增成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "發起提案失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "請輸入提案標題"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
       }
     }
   }
