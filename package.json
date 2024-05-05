@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "swagger": "ts-node ./swagger.ts",
-    "start": "ts-node-dev ./bin/www.ts",
+    "start": "ts-node ./swagger.ts && ts-node-dev ./bin/www.ts",
     "dev": "cross-env NODE_ENV=dev nodemon --watch * -e ts --exec ts-node ./bin/www.ts",
     "production": "cross-env NODE_ENV=production nodemon --watch * -e ts --exec ts-node ./bin/www.ts",
     "lint": "eslint src/**/*.ts",

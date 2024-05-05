@@ -62,13 +62,7 @@ npm run start
 http://localhost:3000/
 ```
 
-### swagger 文件生成
-```bash
-npm run swagger
-```
-
-### 開啟文件
-#### 本地環境
+### swagger 文件
 ```bash
 http://localhost:3000/api-docs
 ```
@@ -79,6 +73,7 @@ http://localhost:3000/api-docs
 PORT=
 MONGODB_URL= # MongoDB 資料庫網址
 MONGODB_PASSWORD= # MongoDB 密碼
+SWAGGER_HOST= # Swagger base url
 ...
 ```
 
