@@ -1,11 +1,15 @@
 import swaggerAutogen from 'swagger-autogen'
+import dotenv from 'dotenv'
+
+dotenv.config({ path: './.env' })
 
 const doc = {
   info: {
     title: 'MoveMove API',
     description: 'Description'
   },
-  host: 'localhost:3000'
+  host: process.env.SWAGGER_HOST,
+  schemes: ['http', 'https']
 }
 
 const outputFile = './swagger-output.json'
