@@ -1,13 +1,8 @@
 {
   "eslint.codeActionsOnSave.rules": null,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "explicit"
   },
   "eslint.format.enable": true,
-"eslint.validate": [
-  "javascipt",
-  "typescript",
-  "javascriptreact",
-  "typescriptreact"
-]
+  "eslint.validate": ["javascipt", "typescript", "javascriptreact", "typescriptreact"]
 }
