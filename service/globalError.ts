@@ -2,7 +2,7 @@ import type errorTask from '../interface/errorTask'
 
 /**
  *
- * @param {number} httpStatus HTTP 狀態碼
+ * @param {number} httpStatus HTTP 狀態碼, 默認 400
  * @param {string} errMessage 自訂錯誤訊息
  * @returns {errorTask} new Error
  */
