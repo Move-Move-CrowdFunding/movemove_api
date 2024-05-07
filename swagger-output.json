@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "MoveMove API",
-    "description": "Description",
+    "description": "<h3>MoveMove 募募 募資網站 API 列表</h3><li>您可以在此查看所有的 API 與線上測試</li><li>若有問題反饋可以到我們的<a href=\"https://github.com/Move-Move-CrowdFunding/movemove_api\">Github</a>發issue</li>",
     "version": "1.0.0"
   },
   "host": "localhost:3000",
@@ -174,6 +174,68 @@
             "token": []
           }
         ]
+      }
+    },
+    "/upload/": {
+      "post": {
+        "tags": [
+          "Upload - 圖片上傳"
+        ],
+        "description": "單一圖片上傳 (儲存在Imgur相簿)",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "formData",
+            "description": "form-data 帶圖片，必須為5MB以內的png或jpeg、gif類型圖檔",
+            "type": "file",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "圖片上傳成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "圖片上傳成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "imageUrl": {
+                      "type": "string",
+                      "example": "https://i.imgur.com/sample.jpeg"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ],
+        "autoBody": true
       }
     }
   }
