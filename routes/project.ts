@@ -1,17 +1,192 @@
 import express, { Request, Response, NextFunction } from 'express'
+import type { paginationOption, paginationReq, paginationData } from '../interface/pagination'
 
 import catchAll from '../service/catchAll'
 import requiredRules from '../utils/requiredRules'
 import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
+import pagination from '../utils/pagination'
 
 import Project from '../models/Project'
 import User from '../models/User'
+import Sponsor from '../models/Sponsor'
 
 import moment from 'moment'
 const router = express.Router()
+// 提案列表
 
-// 發起提案 => TODO: 查詢是否存在該用戶 && middleware
+router.get(
+  '/',
+  catchAll(async (req: paginationReq, res: Response, next: NextFunction) => {
+    /**
+     * #swagger.tags = ['Projects - 提案']
+     * #swagger.description = '提案列表'
+     * #swagger.security = [{
+        token: []
+       }]
+     * #swagger.parameters['pageNo'] = {
+       in: 'query',
+       description: '當前第幾頁',
+       type: 'number',
+       default: '1'
+     }
+     * #swagger.parameters['pageSize'] = {
+       in: 'query',
+       description: '一頁有幾筆',
+       type: 'number',
+       default: '10'
+     }
+     * #swagger.parameters['categoryKey'] = {
+       in: 'query',
+       description: '提案分類: 0-全部 1-教育 2-弱勢救助 3-國際支援 4-兒少福利 5-長者 6-婦女',
+       type: 'number',
+       default: '0',
+     }
+     * #swagger.parameters['isExpired'] = {
+       in: 'query',
+       description: '是否包含已結束募資的提案',
+       type: 'boolean',
+       default: 'false'
+     }
+     * #swagger.parameters['sort'] = {
+       in: 'query',
+       description: '頁面排序: 1-由新到舊 2-由舊到新',
+       type: 'number',
+       default: '1',
+     }
+     * #swagger.parameters['keyword'] = {
+       in: 'query',
+       description: '關鍵字查詢',
+       type: 'string'
+     }
+     * #swagger.responses[200] = {
+        description: '取得募資列表成功',
+        schema: {
+          "status": "success",
+          "message": "取得募資列表成功",
+          "results": [
+          {
+            "id": "663a5750e34b6703e22a9f60",
+            "introduce": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。",
+            "teamName": "弱勢救星",
+            "email": "nomail@mail.com",
+            "phone": "0938938438",
+            "title": "第二筆提案",
+            "categoryKey": 2,
+            "targetMoney": 50000,
+            "startDate": 1718121600,
+            "endDate": 1718985600,
+            "describe": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。",
+            "coverUrl": "https://fakeimg.pl/300/",
+            "content": "<p>test</p>",
+            "videoUrl": "",
+            "relatedUrl": "",
+            "feedbackItem": "限量精美小熊維尼",
+            "feedbackUrl": "https://fakeimg.pl/300/",
+            "feedbackMoney": 100,
+            "feedbackDate": 1682524800,
+            "achievedMoney": 0
+          }
+        ],
+        "pagination": {
+          "count": 1,
+          "pageNo": 1,
+          "pageSize": 10,
+          "hasPre": false,
+          "hasNext": false,
+          "totalPage": 1
+        }
+        },
+       }
+     * #swagger.responses[400] = {
+        description: '取得列表失敗',
+        schema: {
+          "status": "error",
+          "message": "無此分頁"
+        },
+       }
+     *
+     */
+
+    const { categoryKey = 0, isExpired = 'false', sort = 1, keyword = '' } = req.query
+
+    // 提案類型錯誤
+    if (Number(categoryKey) && ![1, 2, 3, 4, 5, 6].includes(Number(categoryKey))) {
+      return next(
+        globalError({
+          errMessage: '提案類型錯誤'
+        })
+      )
+    }
+    if (!['true', 'false'].includes(isExpired) || ![1, 2].includes(Number(sort))) {
+      return next(
+        globalError({
+          errMessage: '參數錯誤'
+        })
+      )
+    }
+
+    // 分頁篩選參數
+    const option: paginationOption = {
+      filter: {
+        title: new RegExp(String(keyword), 'g')
+      },
+      sort: {
+        startDate: Number(sort) === 1 ? -1 : 1
+      },
+      select: '-userId -createTime -updateTime'
+    }
+    if (!JSON.parse(isExpired as string)) {
+      if (option.filter) {
+        option.filter.endDate = { $gt: Date.now() / 1000 }
+      } else {
+        option.filter = { endDate: { $gt: Date.now() / 1000 } }
+      }
+    }
+    if (Number(categoryKey)) {
+      if (option.filter) {
+        option.filter.categoryKey = { $eq: Number(categoryKey) }
+      } else {
+        option.filter = { categoryKey: { $eq: Number(categoryKey) } }
+      }
+    }
+
+    const pageData: void | paginationData = await pagination({
+      database: Project,
+      option,
+      req,
+      next
+    })
+    if (!pageData) return
+    const results = await Promise.all(
+      pageData.results.map(async (item) => {
+        const sponsorData = await Sponsor.find({ projectId: item._id })
+        console.log('item', item)
+
+        const data = {
+          id: item._id,
+          ...item._doc
+        }
+        delete data._id
+        return {
+          ...data,
+          achievedMoney: sponsorData.reduce((num, sponsorItem) => num + Number(sponsorItem.money), 0)
+        }
+      })
+    )
+
+    responseSuccess.success({
+      res,
+      body: {
+        message: '取得募資列表成功',
+        ...pageData,
+        results
+      }
+    })
+  })
+)
+
+// 發起提案 => TODO: middleware
 router.post(
   '/',
   catchAll(async (req: Request, res: Response, next: NextFunction) => {

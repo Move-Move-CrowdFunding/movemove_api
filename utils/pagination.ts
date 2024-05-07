@@ -1,5 +1,6 @@
 import type { paginationOption, paginationReq } from '../interface/pagination'
-import type { errorTask } from '../interface/errorTask'
+import globalError from '../service/globalError'
+import { NextFunction } from 'express'
 
 /**
  *
@@ -7,44 +8,64 @@ import type { errorTask } from '../interface/errorTask'
  * @param {*} option 篩選/排序方法
  * @returns 返回篩選後結果 + 分頁
  */
-const pagination = async (database: any, option: paginationOption, req: paginationReq) => {
-  return await new Promise(async (resolve, reject) => {
-    const { pageSize = 5, pageNo = 1 } = req.body
-    const { sort = {}, filter = {} } = option
+interface Pagination {
+  database: any
+  option: paginationOption
+  req: paginationReq
+  next: NextFunction
+}
+const pagination = async ({ database, option, req, next }: Pagination) => {
+  const pageNo = Number(req.query.pageNo) || 1
+  const pageSize = Number(req.query.pageSize) || 10
+  // const { pageSize = 5, pageNo = 1 } = req.query
+  const { sort = {}, filter = {}, populate, select = '' } = option
 
-    const curPage = await database
+  let curPage = await database
+    .find(filter)
+    .sort(sort)
+    .skip(pageSize * (pageNo - 1))
+    .limit(pageSize)
+    .select(select)
+
+  if (populate) {
+    curPage = await database
       .find(filter)
       .sort(sort)
       .skip(pageSize * (pageNo - 1))
       .limit(pageSize)
-    const totalCount = await database.find(filter).count()
-    const totalPage = Math.ceil(totalCount / pageSize)
+      .populate(populate)
+      .select(select)
+  }
 
-    const data = {
-      data: curPage,
-      pagination: {
-        totalCount,
-        pageNo,
-        hasPre: pageNo > 1,
-        hasNext: pageNo < totalPage,
-        totalPage
-      }
+  const count = await database.find(filter).count()
+  const totalPage = Math.ceil(count / pageSize)
+
+  const data = {
+    results: curPage,
+    pagination: {
+      count,
+      pageNo,
+      pageSize,
+      hasPre: pageNo > 1,
+      hasNext: pageNo < totalPage,
+      totalPage
     }
+  }
 
-    // 當前無資料
-    if (!totalCount) {
-      resolve(data)
-    }
-
+  // 當前無資料
+  if (!count && pageNo === 1) {
+    return data
+  } else if (pageNo < 1 || pageNo > totalPage) {
     // 超過頁數
-    if (pageNo < 1 || pageNo > totalPage) {
-      const err: errorTask = new Error('查無資料')
-      err.status = 400
-      reject(err)
-    }
+    return next(
+      globalError({
+        httpStatus: 404,
+        errMessage: '無此分頁'
+      })
+    )
+  }
 
-    resolve(data)
-  })
+  return data
 }
 
-module.exports = pagination
+export default pagination
