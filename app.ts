@@ -5,8 +5,10 @@ import logger from 'morgan'
 import connectDB from './connections/'
 import type errorTask from './interface/errorTask.ts'
 import responseError from './service/responseError'
+import cors from 'cors'
 
 import projectRouter from './routes/project'
+import uploadRouter from './routes/upload'
 
 // Swagger 使用
 import swaggerUi from 'swagger-ui-express'
@@ -33,8 +35,10 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(cors())
 
 app.use('/project', projectRouter)
+app.use('/upload', uploadRouter)
 
 // 404 路由
 app.use((req: Request, res: Response) => {
