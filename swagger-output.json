@@ -89,6 +89,221 @@
       }
     },
     "/project/": {
+      "get": {
+        "tags": [
+          "Projects - 提案"
+        ],
+        "description": "提案列表",
+        "parameters": [
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "當前第幾頁",
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "一頁有幾筆",
+            "type": "number",
+            "default": "10"
+          },
+          {
+            "name": "categoryKey",
+            "in": "query",
+            "description": "提案分類: 0-全部 1-教育 2-弱勢救助 3-國際支援 4-兒少福利 5-長者 6-婦女",
+            "type": "number",
+            "default": "0"
+          },
+          {
+            "name": "isExpired",
+            "in": "query",
+            "description": "是否包含已結束募資的提案",
+            "type": "boolean",
+            "default": "false"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "頁面排序: 1-由新到舊 2-由舊到新",
+            "type": "number",
+            "default": "1",
+            "enum": [
+              "1",
+              "2"
+            ]
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "description": "關鍵字查詢",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取得募資列表成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得募資列表成功"
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "663a5750e34b6703e22a9f60"
+                      },
+                      "introduce": {
+                        "type": "string",
+                        "example": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。"
+                      },
+                      "teamName": {
+                        "type": "string",
+                        "example": "弱勢救星"
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "nomail@mail.com"
+                      },
+                      "phone": {
+                        "type": "string",
+                        "example": "0938938438"
+                      },
+                      "title": {
+                        "type": "string",
+                        "example": "第二筆提案"
+                      },
+                      "categoryKey": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "targetMoney": {
+                        "type": "number",
+                        "example": 50000
+                      },
+                      "startDate": {
+                        "type": "number",
+                        "example": 1718121600
+                      },
+                      "endDate": {
+                        "type": "number",
+                        "example": 1718985600
+                      },
+                      "describe": {
+                        "type": "string",
+                        "example": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。"
+                      },
+                      "coverUrl": {
+                        "type": "string",
+                        "example": "https://fakeimg.pl/300/"
+                      },
+                      "content": {
+                        "type": "string",
+                        "example": "<p>test</p>"
+                      },
+                      "videoUrl": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "relatedUrl": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "feedbackItem": {
+                        "type": "string",
+                        "example": "限量精美小熊維尼"
+                      },
+                      "feedbackUrl": {
+                        "type": "string",
+                        "example": "https://fakeimg.pl/300/"
+                      },
+                      "feedbackMoney": {
+                        "type": "number",
+                        "example": 100
+                      },
+                      "feedbackDate": {
+                        "type": "number",
+                        "example": 1682524800
+                      },
+                      "achievedMoney": {
+                        "type": "number",
+                        "example": 0
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "pageNo": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "hasPre": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "hasNext": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "totalPage": {
+                      "type": "number",
+                      "example": 1
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "取得列表失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "無此分頁"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      },
       "post": {
         "tags": [
           "Projects - 提案"

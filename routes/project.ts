@@ -13,15 +13,102 @@ import Sponsor from '../models/Sponsor'
 
 import moment from 'moment'
 const router = express.Router()
-
 // 提案列表
+
 router.get(
   '/',
   catchAll(async (req: paginationReq, res: Response, next: NextFunction) => {
+    /**
+     * #swagger.tags = ['Projects - 提案']
+     * #swagger.description = '提案列表'
+     * #swagger.security = [{
+        token: []
+       }]
+     * #swagger.parameters['pageNo'] = {
+       in: 'query',
+       description: '當前第幾頁',
+       type: 'number',
+       default: '1'
+     }
+     * #swagger.parameters['pageSize'] = {
+       in: 'query',
+       description: '一頁有幾筆',
+       type: 'number',
+       default: '10'
+     }
+     * #swagger.parameters['categoryKey'] = {
+       in: 'query',
+       description: '提案分類: 0-全部 1-教育 2-弱勢救助 3-國際支援 4-兒少福利 5-長者 6-婦女',
+       type: 'number',
+       default: '0',
+     }
+     * #swagger.parameters['isExpired'] = {
+       in: 'query',
+       description: '是否包含已結束募資的提案',
+       type: 'boolean',
+       default: 'false'
+     }
+     * #swagger.parameters['sort'] = {
+       in: 'query',
+       description: '頁面排序: 1-由新到舊 2-由舊到新',
+       type: 'number',
+       default: '1',
+     }
+     * #swagger.parameters['keyword'] = {
+       in: 'query',
+       description: '關鍵字查詢',
+       type: 'string'
+     }
+     * #swagger.responses[200] = {
+        description: '取得募資列表成功',
+        schema: {
+          "status": "success",
+          "message": "取得募資列表成功",
+          "results": [
+          {
+            "id": "663a5750e34b6703e22a9f60",
+            "introduce": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。",
+            "teamName": "弱勢救星",
+            "email": "nomail@mail.com",
+            "phone": "0938938438",
+            "title": "第二筆提案",
+            "categoryKey": 2,
+            "targetMoney": 50000,
+            "startDate": 1718121600,
+            "endDate": 1718985600,
+            "describe": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。",
+            "coverUrl": "https://fakeimg.pl/300/",
+            "content": "<p>test</p>",
+            "videoUrl": "",
+            "relatedUrl": "",
+            "feedbackItem": "限量精美小熊維尼",
+            "feedbackUrl": "https://fakeimg.pl/300/",
+            "feedbackMoney": 100,
+            "feedbackDate": 1682524800,
+            "achievedMoney": 0
+          }
+        ],
+        "pagination": {
+          "count": 1,
+          "pageNo": 1,
+          "pageSize": 10,
+          "hasPre": false,
+          "hasNext": false,
+          "totalPage": 1
+        }
+        },
+       }
+     * #swagger.responses[400] = {
+        description: '取得列表失敗',
+        schema: {
+          "status": "error",
+          "message": "無此分頁"
+        },
+       }
+     *
+     */
+
     const { categoryKey = 0, isExpired = 'false', sort = 1, keyword = '' } = req.query
-    // categoryKey: 0-全部 1-教育 2-弱勢救助 3-國際支援 4-兒少福利 5-長者 6-婦女
-    // isExpired 是否須包含已結束募資的提案
-    // sort: 1-由新到舊 2-由舊到新
 
     // 提案類型錯誤
     if (Number(categoryKey) && ![1, 2, 3, 4, 5, 6].includes(Number(categoryKey))) {
