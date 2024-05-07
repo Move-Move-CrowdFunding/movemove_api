@@ -120,14 +120,25 @@ router.post(
       )
     }
     // 日期驗證
-    if (moment(startDate).isBefore(moment(), 'days') || moment(endDate).isBefore(moment(), 'days')) {
+    const startTimer = String(startDate).padEnd(13, '0')
+    const endTimer = String(endDate).padEnd(13, '0')
+
+    if (moment(Number(endTimer)).isBefore(moment(Number(startTimer)))) {
+      return next(
+        globalError({
+          errMessage: '結束時間不可小於開始時間'
+        })
+      )
+    }
+
+    if (moment(Number(startTimer)).isBefore(moment(), 'days') || moment(Number(endTimer)).isBefore(moment(), 'days')) {
       return next(
         globalError({
           errMessage: '日期不可小於今日'
         })
       )
     }
-    if (moment(startDate).diff(moment(), 'days') < 10) {
+    if (moment(Number(startTimer)).diff(moment(), 'days') < 10) {
       return next(
         globalError({
           errMessage: '開始日期不能是 10 日內'
@@ -171,6 +182,31 @@ router.post(
       res,
       body: {
         message: '資料新增成功'
+      }
+    })
+  })
+)
+
+router.delete(
+  '/all',
+  catchAll(async (req: Request, res: Response) => {
+    /**
+     * #swagger.tags = ['Projects - 提案']
+     * #swagger.description = '刪除全部提案(僅刪除假資料使用)'
+     * #swagger.responses[200] = {
+         description: '全部資料刪除成功',
+         schema: {
+           "status": "success",
+           "message": "全部資料刪除成功"
+         }
+       }
+     */
+    await Project.deleteMany()
+
+    responseSuccess.success({
+      res,
+      body: {
+        message: '全部資料刪除成功'
       }
     })
   })
