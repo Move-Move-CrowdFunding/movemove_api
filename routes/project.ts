@@ -1,10 +1,14 @@
 import express, { Request, Response, NextFunction } from 'express'
 
-import Project from '../models/Project'
 import catchAll from '../service/catchAll'
 import requiredRules from '../utils/requiredRules'
 import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
+
+import Project from '../models/Project'
+import User from '../models/User'
+
+import moment from 'moment'
 const router = express.Router()
 
 // 發起提案 => TODO: 查詢是否存在該用戶 && middleware
@@ -107,8 +111,39 @@ router.post(
         })
       )
     }
+    // 提案類型錯誤
+    if (![1, 2, 3, 4, 5, 6].includes(categoryKey)) {
+      return next(
+        globalError({
+          errMessage: '提案類型錯誤'
+        })
+      )
+    }
+    // 日期驗證
+    if (moment(startDate).isBefore(moment(), 'days') || moment(endDate).isBefore(moment(), 'days')) {
+      return next(
+        globalError({
+          errMessage: '日期不可小於今日'
+        })
+      )
+    }
+    if (moment(startDate).diff(moment(), 'days') < 10) {
+      return next(
+        globalError({
+          errMessage: '開始日期不能是 10 日內'
+        })
+      )
+    }
 
-    // TODO: 查詢是否存在該用戶
+    const user = await User.findById(userId)
+    if (!user) {
+      return next(
+        globalError({
+          httpStatus: 404,
+          errMessage: '查無此用戶'
+        })
+      )
+    }
 
     await Project.create({
       userId,
@@ -131,6 +166,7 @@ router.post(
       feedbackMoney,
       feedbackDate
     })
+
     responseSuccess.success({
       res,
       body: {
