@@ -8,7 +8,7 @@
   "host": "localhost:3000",
   "basePath": "/",
   "schemes": [
-    "http"
+    "undefined"
   ],
   "securityDefinitions": {
     "token": {
@@ -21,71 +21,254 @@
   "paths": {
     "/user/sign-up": {
       "post": {
-        "description": "",
+        "tags": [
+          "User"
+        ],
+        "description": "會員註冊",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "會員註冊",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "email": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "elsa@gmail.com"
                 },
                 "password": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "abc123456"
                 },
-                "nickName": {
-                  "example": "any"
+                "niclName": {
+                  "type": "string",
+                  "example": "elsa"
                 }
-              }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "登入成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "註冊成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "註冊失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "請輸入Email | 請輸入有效的Email | 請輸入Password | 密碼至少需要 8 位數 | 這個 Email 已經被註冊過了"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
       }
     },
     "/user/login": {
       "post": {
-        "description": "",
+        "tags": [
+          "User"
+        ],
+        "description": "會員登入",
         "parameters": [
           {
             "name": "body",
             "in": "body",
+            "description": "會員登入",
+            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "email": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "elsa@gmail.com"
                 },
                 "password": {
-                  "example": "any"
+                  "type": "string",
+                  "example": "abc123456"
                 }
-              }
+              },
+              "required": [
+                "email",
+                "password"
+              ]
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "登入成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "登入成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVsc2FAZ21haWwuY29tIiwiYXV0aCI6MCwiaWF0IjoxNzE1MTAwODQxLCJleHAiOjE3MTUxODcyNDF9.iENpkK1osDQguIKY2oAmDkzuSo049qtWQlG0SwzSnTY"
+                    },
+                    "expires": {
+                      "type": "number",
+                      "example": 1615108416
+                    },
+                    "avatar": {
+                      "type": "string",
+                      "example": "https://fakeimg.pl/300/"
+                    },
+                    "auth": {
+                      "type": "number",
+                      "example": 0
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "400": {
-            "description": "Bad Request"
+            "description": "登入失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "請輸入Email | 請輸入有效的Email | 請輸入Password | 密碼錯誤 | 這個 Email 尚未註冊"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/user/check-login": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "description": "確認登入",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "description": "Bearer token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "登入成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "登入成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "登入失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "身分驗證失敗，請重新登入"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
       }
     },
     "/project/": {
