@@ -35,6 +35,15 @@ router.post('/sign-up', async function (req, res) {
         message: '請輸入Password'
       })
       return
+    } else {
+      // 密碼長度需大於 8
+      if (password.length < 8) {
+        res.status(400).json({
+          status: 'error',
+          message: '密碼至少需要 8 位數'
+        })
+        return
+      }
     }
 
     // const SecretKey = process.env.JWT_SECRET_KEY || ''

@@ -3,10 +3,11 @@ import path from 'path'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 import connectDB from './connections/'
-import type errorTask from './interface/errorTask.ts'
+import type errorTask from './interface/errorTask'
 import responseError from './service/responseError'
 import cors from 'cors'
 
+import userRouter from './routes/users'
 import projectRouter from './routes/project'
 import uploadRouter from './routes/upload'
 
@@ -36,7 +37,9 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(cors())
+// app.use(loggingMiddleware)
 
+app.use('/user', userRouter)
 app.use('/project', projectRouter)
 app.use('/upload', uploadRouter)
 
