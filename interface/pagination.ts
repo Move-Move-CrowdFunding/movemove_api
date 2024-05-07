@@ -1,18 +1,35 @@
 interface paginationOption {
-  sort: {
+  sort?: {
     [key: string]: any
   }
-  filter: {
+  filter?: {
     [key: string]: any
   }
+  populate?: {
+    [key: string]: any
+  }
+  select?: string
 }
 
-interface paginationReq {
-  body: {
+interface paginationReq extends Request {
+  query: {
     pageSize: number
     pageNo: number
+    [key: string]: any
   }
   [key: string]: any
 }
 
-export { paginationOption, paginationReq }
+interface paginationData {
+  results: any[]
+  pagination: {
+    count: number
+    pageNo: number
+    pageSize: number
+    hasPre: boolean
+    hasNext: boolean
+    totalPage: number
+  }
+}
+
+export { paginationOption, paginationReq, paginationData }
