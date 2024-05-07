@@ -5,8 +5,11 @@
     "description": "<h3>MoveMove 募募 募資網站 API 列表</h3><li>您可以在此查看所有的 API 與線上測試</li><li>若有問題反饋可以到我們的<a href=\"https://github.com/Move-Move-CrowdFunding/movemove_api\">Github</a>發issue</li>",
     "version": "1.0.0"
   },
+  "host": "localhost:3000",
   "basePath": "/",
-  "schemes": ["undefined"],
+  "schemes": [
+    "http"
+  ],
   "securityDefinitions": {
     "token": {
       "type": "apiKey",
@@ -18,157 +21,78 @@
   "paths": {
     "/user/sign-up": {
       "post": {
-        "tags": ["User"],
-        "description": "註冊會員",
+        "description": "",
         "parameters": [
           {
             "name": "body",
             "in": "body",
-            "description": "註冊會員格式",
-            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "email": {
-                  "type": "string",
-                  "example": "elsa.syu@gmail.com"
+                  "example": "any"
                 },
                 "password": {
-                  "type": "string",
-                  "example": "Abc123456789"
+                  "example": "any"
                 },
                 "nickName": {
-                  "type": "string",
-                  "example": "羽"
+                  "example": "any"
                 }
-              },
-              "required": ["email", "password"]
+              }
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "註冊成功",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "success"
-                },
-                "message": {
-                  "type": "string",
-                  "example": "註冊成功"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK"
           },
           "400": {
-            "description": "註冊失敗",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "error"
-                },
-                "message": {
-                  "type": "string",
-                  "example": "請輸入Email | 請輸入有效的Email | 請輸入Password | 密碼至少需要 8 位數 | 這個 Email 已經被註冊過了"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
-        },
-        "security": [
-          {
-            "token": []
-          }
-        ]
+        }
       }
     },
     "/user/login": {
       "post": {
-        "tags": ["User"],
-        "description": "登入會員",
+        "description": "",
         "parameters": [
           {
             "name": "body",
             "in": "body",
-            "description": "登入會員格式",
-            "required": true,
             "schema": {
               "type": "object",
               "properties": {
                 "email": {
-                  "type": "string",
-                  "example": "elsa.syu@gmail.com"
+                  "example": "any"
                 },
                 "password": {
-                  "type": "string",
-                  "example": "Abc123456789"
+                  "example": "any"
                 }
-              },
-              "required": ["email", "password"]
+              }
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "登入成功",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "success"
-                },
-                "message": {
-                  "type": "string",
-                  "example": "登入成功"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "OK"
           },
           "400": {
-            "description": "登入失敗",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "error"
-                },
-                "message": {
-                  "type": "string",
-                  "example": "請輸入Email | 無此帳號 | 請輸入Password | 密碼至少需要 8 位數 | 密碼錯誤"
-                }
-              },
-              "xml": {
-                "name": "main"
-              }
-            }
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
-        },
-        "security": [
-          {
-            "token": []
-          }
-        ]
+        }
       }
     },
     "/project/": {
       "post": {
-        "tags": ["Projects - 提案"],
+        "tags": [
+          "Projects - 提案"
+        ],
         "description": "發起提案",
         "parameters": [
           {
@@ -320,11 +244,44 @@
         ]
       }
     },
+    "/project/all": {
+      "delete": {
+        "tags": [
+          "Projects - 提案"
+        ],
+        "description": "刪除全部提案(僅刪除假資料使用)",
+        "responses": {
+          "200": {
+            "description": "全部資料刪除成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "全部資料刪除成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
     "/upload/": {
       "post": {
-        "tags": ["Upload - 圖片上傳"],
+        "tags": [
+          "Upload - 圖片上傳"
+        ],
         "description": "單一圖片上傳 (儲存在Imgur相簿)",
-        "consumes": ["multipart/form-data"],
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
           {
             "name": "body",
