@@ -4,10 +4,5 @@
     "source.fixAll.eslint": "explicit"
   },
   "eslint.format.enable": true,
-"eslint.validate": [
-  "javascipt",
-  "typescript",
-  "javascriptreact",
-  "typescriptreact"
-]
+  "eslint.validate": ["javascipt", "typescript", "javascriptreact", "typescriptreact"]
 }

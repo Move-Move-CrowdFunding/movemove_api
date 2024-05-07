@@ -10,7 +10,7 @@ const connectDB = () => {
   }
 
   const DB = String(process.env.MONGODB_URL).replace('<password>', String(process.env.MONGODB_PASSWORD))
-  mongoose.connect(DB).then(() => console.log('資料庫連接成功'))
+  mongoose.connect(DB).then(() => console.log(`${process.env.MONGODB_URL} 連接成功`))
 }
 
 export default connectDB
