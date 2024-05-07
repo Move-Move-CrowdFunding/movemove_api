@@ -10,7 +10,7 @@ const doc = {
       '<h3>MoveMove 募募 募資網站 API 列表</h3><li>您可以在此查看所有的 API 與線上測試</li><li>若有問題反饋可以到我們的<a href="https://github.com/Move-Move-CrowdFunding/movemove_api">Github</a>發issue</li>'
   },
   host: process.env.SWAGGER_HOST,
-  schemes: [`${process.env.SWAGGER_SCHEMES ? 'http' : 'https'}`],
+  schemes: [`${process.env.SWAGGER_SCHEMES}`],
   securityDefinitions: {
     token: {
       type: 'apiKey',
