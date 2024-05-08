@@ -13,7 +13,8 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ success: 'error', message: 'Authorization token 不合法' })
   }
   try {
-    jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
+    const decoded = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
+    ;(req as any).user = decoded
     next()
   } catch (err) {
     console.error(err)
