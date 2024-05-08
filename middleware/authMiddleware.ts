@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import jwt from 'jsonwebtoken'
+import jwt, { GetPublicKeyOrSecret, Secret } from 'jsonwebtoken'
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const authorizationHeader = req.header('Authorization')
@@ -13,7 +13,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ success: 'error', message: 'Authorization token 不合法' })
   }
   try {
-    const decoded = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY as GetPublicKeyOrSecret | Secret)
     ;(req as any).user = decoded
     next()
   } catch (err) {
