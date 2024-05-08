@@ -189,7 +189,7 @@ router.post('/login', async function (req, res) {
       const isPasswordValid = await bcrypt.compare(`${password}`, userData.password)
 
       if (isPasswordValid) {
-        const token = getJWTtoken(email, userData.auth || 0, userData.id)
+        const token = getJWTtoken(userData.auth || 0, userData.id)
         res.status(200).json({
           status: 'success',
           message: '登入成功',
