@@ -332,9 +332,10 @@ router.get('/', authMiddleware, async function (req, res) {
      *
      */
   try {
-    const { email } = (req as any).user
+    const { id } = (req as any).user
 
-    const userData = await UserModal.findOne({ email }, { password: 0 })
+    const userData = await UserModal.findOne({ _id: id }, { password: 0 })
+
     if (userData) {
       res.status(200).json({
         status: 'success',
@@ -372,15 +373,22 @@ router.patch('/', authMiddleware, async function (req, res) {
         required: true,
         type: 'string'
       }
-      * #swagger.parameters['body'] = {
+ * #swagger.parameters['body'] = {
         in: 'body',
-        description: '修改會員資料',
+        description: '修改會員資料<br>*只會更新body有帶的key',
         type: 'object',
         required: true,
         schema: {
-          nickName: 'elsa',
-          userName: 'elsa syu'
-      }
+          nickName: "Elsa",
+          userName: "",
+          gender: 0,
+          phone: "",
+          address: "",
+          teamName: "",
+          aboutMe: "",
+          avatar: "",
+        }
+       }
      * #swagger.responses[200] = {
         description: '修改會員資料',
         schema: {
@@ -414,37 +422,30 @@ router.patch('/', authMiddleware, async function (req, res) {
      */
   try {
     const { id } = (req as any).user
-    // const userData = await UserModal.findOne({ email }, { password: 0 })
-
-    // if (userData) {
-    // const { nickName, userName, gender, phone, address, teamName, aboutMe, avatar } = req.body
+    const { nickName, userName, gender, phone, address, teamName, aboutMe, avatar } = req.body
+    const payload = {
+      nickName,
+      userName,
+      gender,
+      phone,
+      address,
+      teamName,
+      aboutMe,
+      avatar
+    }
     // 更新會員資料
-    await UserModal.findOneAndUpdate(id, req.body, function (err: any, updateData: any) {
-      if (err) {
-        res.status(400).json({
-          status: 'error',
-          message: '修改失敗'
-        })
-        return
-      }
-      res.status(200).json({
-        status: 'success',
-        message: '修改會員資料成功',
-        results: updateData
-      })
+    const updateData = await await UserModal.findOneAndUpdate({ _id: id }, payload, { new: true }).select('-password')
+
+    res.status(200).json({
+      status: 'success',
+      message: '更新會員資料成功',
+      results: updateData
     })
-    // } else {
-    //   res.status(400).json({
-    //     status: 'error',
-    //     message: '無此會員'
-    //   })
-    // }
   } catch (error) {
     console.log(error)
-
-    res.status(500).json({
+    res.status(400).json({
       status: 'error',
-      message: '伺服器錯誤'
+      message: '更新會員資料失敗'
     })
   }
 })
