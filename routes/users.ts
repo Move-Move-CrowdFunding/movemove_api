@@ -22,7 +22,7 @@ router.post('/sign-up', async function (req, res) {
         schema: {
           $email: 'elsa@gmail.com',
           $password: 'abc123456',
-          niclName: 'elsa'
+          nickName: 'elsa'
         }
        }
      * #swagger.responses[200] = {
@@ -190,12 +190,13 @@ router.post('/login', async function (req, res) {
 
       if (isPasswordValid) {
         const token = getJWTtoken(userData.auth || 0, userData.id)
+
         res.status(200).json({
           status: 'success',
           message: '登入成功',
           results: {
             token,
-            expires: Math.floor(Date.now() / 1000),
+            expires: Math.floor(Date.now() / 1000) + 86400,
             avatar: userData.avatar,
             auth: userData.auth
           }
