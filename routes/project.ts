@@ -1,12 +1,16 @@
 import express, { Request, Response, NextFunction } from 'express'
 import type { paginationOption, paginationReq, paginationData } from '../interface/pagination'
+import tokenInfo from '../interface/tokenInfo'
 
 import catchAll from '../service/catchAll'
 import requiredRules from '../utils/requiredRules'
 import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
+
 import pagination from '../utils/pagination'
+
 import parseToken from '../middleware/parseToken'
+import authMiddleware from '../middleware/authMiddleware'
 
 import Project from '../models/Project'
 import User from '../models/User'
@@ -25,9 +29,6 @@ router.get(
     /**
      * #swagger.tags = ['Projects - 提案']
      * #swagger.description = '提案列表'
-     * #swagger.security = [{
-        token: []
-       }]
      * #swagger.parameters['pageNo'] = {
        in: 'query',
        description: '當前第幾頁',
@@ -199,9 +200,9 @@ router.get(
   })
 )
 
-// 發起提案 => TODO: middleware
 router.post(
   '/',
+  authMiddleware,
   catchAll(async (req: Request, res: Response, next: NextFunction) => {
     /**
      * #swagger.tags = ['Projects - 提案']
@@ -253,7 +254,6 @@ router.post(
      *
      */
     const {
-      userId = '',
       introduce = '',
       teamName = '',
       title = '',
@@ -277,7 +277,6 @@ router.post(
     const requiredError: string[] = requiredRules({
       req,
       params: [
-        'userId',
         'teamName',
         'email',
         'phone',
@@ -310,6 +309,7 @@ router.post(
     // 日期驗證
     const startTimer = String(startDate).padEnd(13, '0')
     const endTimer = String(endDate).padEnd(13, '0')
+    const feedbackTimer = String(feedbackDate).padEnd(13, '0')
 
     if (moment(Number(endTimer)).isBefore(moment(Number(startTimer)))) {
       return next(
@@ -319,7 +319,11 @@ router.post(
       )
     }
 
-    if (moment(Number(startTimer)).isBefore(moment(), 'days') || moment(Number(endTimer)).isBefore(moment(), 'days')) {
+    if (
+      moment(Number(startTimer)).isBefore(moment(), 'days') ||
+      moment(Number(endTimer)).isBefore(moment(), 'days') ||
+      moment(Number(feedbackTimer)).isBefore(moment(), 'days')
+    ) {
       return next(
         globalError({
           errMessage: '日期不可小於今日'
@@ -334,7 +338,7 @@ router.post(
       )
     }
 
-    const user = await User.findById(userId)
+    const user = await User.findById((req as tokenInfo).user.id)
     if (!user) {
       return next(
         globalError({
@@ -345,7 +349,7 @@ router.post(
     }
 
     await Project.create({
-      userId,
+      userId: (req as tokenInfo).user.id,
       introduce,
       teamName,
       title,
@@ -357,8 +361,8 @@ router.post(
       coverUrl,
       describe,
       videoUrl,
-      startDate,
-      endDate,
+      startDate: Number(startTimer.substring(0, 10)),
+      endDate: Number(endTimer.substring(0, 10)),
       relatedUrl,
       feedbackItem,
       feedbackUrl,

@@ -3,7 +3,11 @@ import jwt from 'jsonwebtoken'
 
 interface tokenInfo extends Request {
   isLogin: boolean
-  user: string | jwt.JwtPayload
+  user: {
+    auth: number
+    id: string
+    [key: string]: any
+  }
   payload: string | jwt.JwtPayload
 }
 
