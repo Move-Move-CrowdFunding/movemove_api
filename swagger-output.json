@@ -8,7 +8,7 @@
   "host": "localhost:3000",
   "basePath": "/",
   "schemes": [
-    "undefined"
+    "http"
   ],
   "securityDefinitions": {
     "token": {
@@ -271,6 +271,128 @@
         ]
       }
     },
+    "/user/": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "description": "取得會員資料",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "description": "Bearer token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "登入成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "example": "elsa@gmail.com"
+                    },
+                    "auth": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "nickName": {
+                      "type": "string",
+                      "example": "Elsa"
+                    },
+                    "userName": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "gender": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "teamName": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "aboutMe": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "avatar": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "createTime": {
+                      "type": "number",
+                      "example": 1715098808
+                    },
+                    "updateTime": {
+                      "type": "number",
+                      "example": 1715098808
+                    },
+                    "id": {
+                      "type": "string",
+                      "example": "663a54b8c9225d0f16b55020"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "取得會員資料失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "無此會員"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
     "/project/": {
       "get": {
         "tags": [
@@ -311,11 +433,7 @@
             "in": "query",
             "description": "頁面排序: 1-由新到舊 2-由舊到新",
             "type": "number",
-            "default": "1",
-            "enum": [
-              "1",
-              "2"
-            ]
+            "default": "1"
           },
           {
             "name": "keyword",
