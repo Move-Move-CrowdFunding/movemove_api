@@ -1,7 +1,7 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
 import UserModal from '../models/User'
-import authMiddleware from '../service/authMiddleware'
+import authMiddleware from '../middleware/authMiddleware'
 import { getJWTtoken, verifyJWTtoken } from '../utils/jwt'
 
 const router = express.Router()

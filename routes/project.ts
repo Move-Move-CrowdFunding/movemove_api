@@ -6,17 +6,21 @@ import requiredRules from '../utils/requiredRules'
 import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
 import pagination from '../utils/pagination'
+import parseToken from '../middleware/parseToken'
 
 import Project from '../models/Project'
 import User from '../models/User'
 import Sponsor from '../models/Sponsor'
+import Track from '../models/Track'
 
 import moment from 'moment'
 const router = express.Router()
+
 // 提案列表
 
 router.get(
   '/',
+  parseToken,
   catchAll(async (req: paginationReq, res: Response, next: NextFunction) => {
     /**
      * #swagger.tags = ['Projects - 提案']
@@ -161,16 +165,25 @@ router.get(
     const results = await Promise.all(
       pageData.results.map(async (item) => {
         const sponsorData = await Sponsor.find({ projectId: item._id })
-        console.log('item', item)
 
         const data = {
           id: item._id,
           ...item._doc
         }
         delete data._id
+
+        let trackData
+        if (req.isLogin) {
+          trackData = await Track.findOne({
+            projectId: item._id,
+            userId: req.payload.id
+          })
+        }
+
         return {
           ...data,
-          achievedMoney: sponsorData.reduce((num, sponsorItem) => num + Number(sponsorItem.money), 0)
+          achievedMoney: sponsorData.reduce((num, sponsorItem) => num + Number(sponsorItem.money), 0),
+          trackingStatus: req.isLogin && !!trackData
         }
       })
     )
