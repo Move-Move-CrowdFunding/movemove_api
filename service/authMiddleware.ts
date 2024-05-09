@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 
 const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const authorizationHeader = req.header('Authorization')
+  const authorizationHeader = req.header('Authorization') || req.header('authorization')
 
   if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
     return res.status(401).json({ success: 'error', message: ' Authorization header 缺失 Bearer' })
