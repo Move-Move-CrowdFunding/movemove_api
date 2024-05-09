@@ -1,4 +1,5 @@
 interface paginationOption {
+  [key: string]: any
   sort?: {
     [key: string]: any
   }
@@ -8,7 +9,14 @@ interface paginationOption {
   populate?: {
     [key: string]: any
   }
-  select?: string
+  lookup?: {
+    [key: string]: any
+  }
+  select?:
+    | string
+    | {
+        [key: string]: any
+      }
 }
 
 interface paginationReq extends Request {

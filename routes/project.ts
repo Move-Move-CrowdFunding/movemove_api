@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express'
 import type { paginationOption, paginationReq, paginationData } from '../interface/pagination'
 import tokenInfo from '../interface/tokenInfo'
+import { Types } from 'mongoose'
 
 import catchAll from '../service/catchAll'
 import requiredRules from '../utils/requiredRules'
@@ -15,7 +16,7 @@ import authMiddleware from '../middleware/authMiddleware'
 import Project from '../models/Project'
 import User from '../models/User'
 import Sponsor from '../models/Sponsor'
-import Track from '../models/Track'
+// import Track from '../models/Track'
 
 import moment from 'moment'
 const router = express.Router()
@@ -90,7 +91,8 @@ router.get(
             "feedbackUrl": "https://fakeimg.pl/300/",
             "feedbackMoney": 100,
             "feedbackDate": 1682524800,
-            "achievedMoney": 0
+            "achievedMoney": 0,
+            "trackingStatus": false
           }
         ],
         "pagination": {
@@ -139,7 +141,26 @@ router.get(
       sort: {
         startDate: Number(sort) === 1 ? -1 : 1
       },
-      select: '-userId -createTime -updateTime'
+      select: {
+        userId: 0,
+        createTime: 0,
+        updateTime: 0
+      },
+      lookup: {
+        from: 'sponsors',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'sponsorList'
+      },
+      lookup1: {
+        from: 'tracks',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'trackList'
+      }
+      // populate: {
+      //   path: 'userId'
+      // }
     }
     if (!JSON.parse(isExpired as string)) {
       if (option.filter) {
@@ -162,32 +183,63 @@ router.get(
       req,
       next
     })
-    if (!pageData) return
-    const results = await Promise.all(
-      pageData.results.map(async (item) => {
-        const sponsorData = await Sponsor.find({ projectId: item._id })
+    if (!pageData) {
+      return next(
+        globalError({
+          errMessage: '資料讀取錯誤'
+        })
+      )
+    }
+    const results = pageData.results.map((item) => {
+      const {
+        _id,
+        introduce,
+        teamName,
+        title,
+        email,
+        categoryKey,
+        phone,
+        targetMoney,
+        content,
+        coverUrl,
+        describe,
+        videoUrl,
+        startDate,
+        endDate,
+        relatedUrl,
+        feedbackItem,
+        feedbackUrl,
+        feedbackMoney,
+        feedbackDate,
+        trackList = [],
+        sponsorList = []
+      } = item
 
-        const data = {
-          id: item._id,
-          ...item._doc
-        }
-        delete data._id
-
-        let trackData
-        if (req.isLogin) {
-          trackData = await Track.findOne({
-            projectId: item._id,
-            userId: req.payload.id
-          })
-        }
-
-        return {
-          ...data,
-          achievedMoney: sponsorData.reduce((num, sponsorItem) => num + Number(sponsorItem.money), 0),
-          trackingStatus: req.isLogin && !!trackData
-        }
-      })
-    )
+      return {
+        id: _id,
+        introduce,
+        teamName,
+        title,
+        email,
+        categoryKey,
+        phone,
+        achievedMoney: sponsorList.reduce((num: number, obj: any) => num + Number(obj.money), 0),
+        targetMoney,
+        content,
+        coverUrl,
+        describe,
+        videoUrl,
+        startDate,
+        endDate,
+        relatedUrl,
+        feedbackItem,
+        feedbackUrl,
+        feedbackMoney,
+        feedbackDate,
+        trackingStatus:
+          req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
+      }
+    })
 
     responseSuccess.success({
       res,
@@ -399,6 +451,19 @@ router.delete(
       res,
       body: {
         message: '全部資料刪除成功'
+      }
+    })
+  })
+)
+
+router.post(
+  '/test',
+  catchAll(async (req: paginationReq, res: Response) => {
+    await Sponsor.create({ ...req.body })
+    responseSuccess.success({
+      res,
+      body: {
+        message: '成功'
       }
     })
   })
