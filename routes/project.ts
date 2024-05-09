@@ -139,7 +139,20 @@ router.get(
       sort: {
         startDate: Number(sort) === 1 ? -1 : 1
       },
-      select: '-userId -createTime -updateTime'
+      select: {
+        userId: 0,
+        createTime: 0,
+        updateTime: 0
+      },
+      lookup: {
+        from: 'Sponsor',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'sponsorList'
+      }
+      // populate: {
+      //   path: 'userId'
+      // }
     }
     if (!JSON.parse(isExpired as string)) {
       if (option.filter) {
@@ -162,39 +175,38 @@ router.get(
       req,
       next
     })
-    if (!pageData) return
-    const results = await Promise.all(
-      pageData.results.map(async (item) => {
-        const sponsorData = await Sponsor.find({ projectId: item._id })
+    // if (!pageData) return
+    // const results = await Promise.all(
+    //   pageData.results.map(async (item) => {
+    //     const sponsorData = await Sponsor.find({ projectId: item._id })
 
-        const data = {
-          id: item._id,
-          ...item._doc
-        }
-        delete data._id
+    //     const data = {
+    //       id: item._id,
+    //       ...item._doc
+    //     }
+    //     delete data._id
 
-        let trackData
-        if (req.isLogin) {
-          trackData = await Track.findOne({
-            projectId: item._id,
-            userId: req.payload.id
-          })
-        }
+    //     let trackData
+    //     if (req.isLogin) {
+    //       trackData = await Track.findOne({
+    //         projectId: item._id,
+    //         userId: req.payload.id
+    //       })
+    //     }
 
-        return {
-          ...data,
-          achievedMoney: sponsorData.reduce((num, sponsorItem) => num + Number(sponsorItem.money), 0),
-          trackingStatus: req.isLogin && !!trackData
-        }
-      })
-    )
+    //     return {
+    //       ...data,
+    //       achievedMoney: sponsorData.reduce((num, sponsorItem) => num + Number(sponsorItem.money), 0),
+    //       trackingStatus: req.isLogin && !!trackData
+    //     }
+    //   })
+    // )
 
     responseSuccess.success({
       res,
       body: {
         message: '取得募資列表成功',
-        ...pageData,
-        results
+        ...pageData
       }
     })
   })

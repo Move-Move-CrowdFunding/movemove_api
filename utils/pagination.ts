@@ -17,24 +17,43 @@ interface Pagination {
 const pagination = async ({ database, option, req, next }: Pagination) => {
   const pageNo = Number(req.query.pageNo) || 1
   const pageSize = Number(req.query.pageSize) || 10
-  // const { pageSize = 5, pageNo = 1 } = req.query
-  const { sort = {}, filter = {}, populate, select = '' } = option
+  const { filter, populate } = option
 
-  let curPage = await database
-    .find(filter)
-    .sort(sort)
-    .skip(pageSize * (pageNo - 1))
-    .limit(pageSize)
-    .select(select)
+  const optionArr: any[] = []
+  const addOptionArr = (object: any, objectName: string) => {
+    if (Object.keys(object) && objectName) {
+      const keyMap = new Map([
+        ['filter', '$match'],
+        ['sort', '$sort'],
+        ['select', '$project'],
+        ['lookup', '$lookup']
+      ])
+      if (keyMap.has(objectName)) {
+        optionArr.push({
+          [keyMap.get(objectName) as string]: object
+        })
+      }
+    }
+  }
 
+  Object.keys(option).forEach((keyStr) => addOptionArr(option[keyStr], String(keyStr)))
+
+  // 向下查找
+  const curPage = await database
+    .aggregate([
+      ...optionArr,
+      {
+        $skip: pageSize * (pageNo - 1)
+      },
+      {
+        $limit: pageSize
+      }
+    ])
+    .exec()
+
+  // 向上查找
   if (populate) {
-    curPage = await database
-      .find(filter)
-      .sort(sort)
-      .skip(pageSize * (pageNo - 1))
-      .limit(pageSize)
-      .populate(populate)
-      .select(select)
+    await database.populate(curPage, populate)
   }
 
   const count = await database.find(filter).count()
