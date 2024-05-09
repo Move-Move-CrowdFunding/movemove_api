@@ -253,15 +253,15 @@ router.post('/check-login', async function (req, res) {
      *
      */
   try {
-    const { authorization } = req.headers
-
-    if (!authorization) {
+    const { authorization, Authorization } = req.headers
+    const auth = authorization || Authorization || ''
+    if (!auth) {
       res.status(401).json({
         status: 'error',
         message: '身分驗證失敗，請重新登入'
       })
     } else {
-      const token = authorization.replace('Bearer ', '')
+      const token = String(auth).replace('Bearer ', '')
       try {
         await verifyJWTtoken(token)
         res.status(200).json({
@@ -277,7 +277,6 @@ router.post('/check-login', async function (req, res) {
     }
   } catch (error) {
     console.log(error)
-
     res.status(500).json({
       status: 'error',
       message: '伺服器錯誤'
@@ -304,7 +303,7 @@ router.get('/', authMiddleware, async function (req, res) {
         description: '成功取得會員資料',
         schema: {
           "status": "success",
-          "message": "success",
+          "message": "成功取得會員資料",
           "results": {
             "email": "elsa@gmail.com",
             "auth": 0,
@@ -339,7 +338,7 @@ router.get('/', authMiddleware, async function (req, res) {
     if (userData) {
       res.status(200).json({
         status: 'success',
-        message: 'success',
+        message: '成功取得會員資料',
         results: userData
       })
     } else {
