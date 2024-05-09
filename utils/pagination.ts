@@ -7,13 +7,16 @@ import { NextFunction } from 'express'
  * @param {*} database 單一資料庫名稱
  * @param {*} option 篩選/排序方法
  * @returns 返回篩選後結果 + 分頁
+ * 具體使用可參考 GET - /project
  */
+
 interface Pagination {
   database: any
   option: paginationOption
   req: paginationReq
   next: NextFunction
 }
+
 const pagination = async ({ database, option, req, next }: Pagination) => {
   const pageNo = Number(req.query.pageNo) || 1
   const pageSize = Number(req.query.pageSize) || 10
@@ -26,7 +29,8 @@ const pagination = async ({ database, option, req, next }: Pagination) => {
         ['filter', '$match'],
         ['sort', '$sort'],
         ['select', '$project'],
-        ['lookup', '$lookup']
+        ['lookup', '$lookup'],
+        ['lookup1', '$lookup']
       ])
       if (keyMap.has(objectName)) {
         optionArr.push({
