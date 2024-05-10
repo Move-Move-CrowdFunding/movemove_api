@@ -1,10 +1,11 @@
 import express from 'express'
 import authMiddleware from '../middleware/authMiddleware'
 import checkAdminAuth from '../middleware/checkAdminAuth'
+import ProjectModel from '../models/Project'
 
 const router = express.Router()
 
-// 管理端 檔案列表-查詢 API /admin/projects
+// 管理端 檔案列表-查詢 API /admin/projects TODO: 分頁功能 搜尋功能 完整的提案資料
 router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
@@ -12,24 +13,44 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
    * #swagger.security = [{
       token: []
     }]
+    * #swagger.parameters['pageNo'] = {
+      in: 'query',
+      description: '當前頁數',
+      type: 'number',
+      default: '1'
+    }
+    * #swagger.parameters['pageSize'] = {
+      in: 'query',
+      description: '單頁筆數',
+      type: 'number',
+      default: '10'
+    }
+    * #swagger.parameters['sortDesc'] = {
+      in: 'query',
+      description: '提案新舊排序',
+      type: 'boolean',
+      default: 'false'
+    }
+    * #swagger.parameters['status'] = {
+      in: 'query',
+      description: '提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）',
+      type: 'number',
+      default: '0'
+    }
+    * #swagger.parameters['search'] = {
+      in: 'query',
+      description: '提案標題關鍵字或編號',
+      type: 'string',
+      default: ''
+    }
   * #swagger.responses[200] = {
     description: '取得提案列表成功',
     schema: {
         "status": "success",
         "message": "取得提案列表",
-        "results": [
-            {
-              "id": "_NDWQODQ123DSWA",
-              "coverUrl": "https://sample.url/picture.png",
-              "title": "樂知修繕隊緊急求援|弱勢助弱勢,修家修心不能停",
-              "startDate": 1728492012,
-              "endDate": 1728492012,
-              "targetMoney": 100000,
-              "countMoney": 500,
-              "nickName": "弱勢救星",
-              "status": 0
-            }
-          ],
+        "results": {
+            "projects": "...data"
+        },
         "pagination": {
             "pageNo": 1,
             "pageSize": 10,
@@ -46,81 +67,58 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   */
 
   try {
-    // if (!auth) {
-    //   res.status(401).json({
-    //     status: 'error',
-    //     message: '身分驗證失敗，請重新登入'
-    //   })
-    // } else {
-    //   const token = String(auth).replace('Bearer ', '')
-    //   try {
-    //     await verifyJWTtoken(token)
-    //     res.status(200).json({
-    //       status: 'success',
-    //       message: '登入成功'
-    //     })
-
     // 請求參數檢查
     const errorMsg = []
-    /*
-      pageNo 當前頁數（預設1）
-      pageSize 單頁筆數（預設10）
-      sortDesc 提案新舊排序（預設false）
-      status 提案狀態
-      search 搜尋提案關鍵字或編號
-    */
     const { pageNo = 1, pageSize = 10, sortDesc = 'false', status = 0, search = '' } = req.query
-
+    let sort: any = '1'
     // 當前頁數
-    if (!Number(pageNo)) {
+    if (!Number(pageNo) || Number(pageNo) < 1) {
       errorMsg.push('當前頁數錯誤')
     }
 
     // 單頁筆數
-    if (!Number(pageSize)) {
+    if (!Number(pageSize) || Number(pageSize) < 1) {
       errorMsg.push('單頁筆數錯誤')
     }
 
     // 提案新舊排序
-    if (!['true', 'false'].includes(String(sortDesc))) {
+    if (!['true', 'false'].includes(sortDesc.toString())) {
       errorMsg.push('提案新舊排序錯誤')
+    } else {
+      sort = sortDesc === 'true' ? 1 : -1
     }
 
-    // 提案狀態錯誤 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）
+    // 提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）
     if (![0, 1, -1, 2, 3].includes(Number(status))) {
       errorMsg.push('提案狀態錯誤')
     }
 
-    // 有search參數值則進行搜尋
-    if (String(search)) {
-      // 若不能則搜尋提案關鍵字
-    }
-
     if (errorMsg.length === 0) {
+      // 搜尋提案編號或標題關鍵字
+      const filter = { title: { $regex: search } }
+
+      // 分頁參數
+      const totalProjects = await ProjectModel.countDocuments(filter)
+      const totalPage = Math.ceil(totalProjects / Number(pageSize))
+      const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
+
+      // 條件式查詢
+      const projectsData = await ProjectModel.find(filter)
+        .skip((Number(safePageNo) - 1) * Number(pageSize))
+        .limit(Number(pageSize || 10))
+        .sort({ startDate: sort })
+
       return res.status(200).json({
         status: 'success',
         message: '提案列表取得成功',
-        results: [
-          {
-            id: '_NDWQODQ123DSWA',
-            coverUrl: 'https://sample.url/picture.png',
-            title: '樂知修繕隊緊急求援|弱勢助弱勢,修家修心不能停',
-            startDate: 1728492012,
-            endDate: 1728492012,
-            targetMoney: 100000,
-            countMoney: 500,
-            nickName: '弱勢救星',
-            status: 0
-          }
-        ],
+        results: projectsData,
         pagination: {
-          pageNo: 1,
-          pageSize: 10,
-          totalPage: 3,
-          count: 25,
-          sortDesc: false,
-          status: 0,
-          search: '關鍵字搜尋'
+          pageNo: Number(safePageNo),
+          pageSize: Number(pageSize),
+          totalPage,
+          count: totalProjects,
+          sortDesc: String(sortDesc),
+          search: String(search)
         }
       })
     } else {
@@ -133,6 +131,45 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     return res.status(500).json({
       status: 'error',
       message: '伺服器錯誤'
+    })
+  }
+})
+
+// 管理端 取得提案內容 API /admin/projects/{project} TODO: 取得完整提案內容功能
+router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, res) => {
+  /**
+   * #swagger.tags = ['Admin - 管理端']
+   * #swagger.description = '取得提案內容'
+   * #swagger.security = [{
+      token: []
+    }]
+  * #swagger.responses[200] = {
+    description: '取得提案資料成功',
+    schema: {
+      "status": "success",
+      "message": "取得提案資料成功",
+      "results": {
+          "projects": "...data"
+      }
+    }
+  }
+  *
+  */
+
+  try {
+    const projectId = req.params.projectId || 'empty'
+    console.log(projectId)
+    await ProjectModel.find({ _id: projectId }).then((projectData) => {
+      return res.status(200).json({
+        status: 'success',
+        message: '取得提案資料成功',
+        results: projectData
+      })
+    })
+  } catch (error) {
+    return res.status(404).json({
+      status: 'error',
+      message: '找不到此提案'
     })
   }
 })

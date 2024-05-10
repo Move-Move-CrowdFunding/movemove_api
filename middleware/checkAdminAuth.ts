@@ -8,7 +8,6 @@ const checkAdminAuth = (req: Request, res: Response, next: NextFunction) => {
     const auth = authorization || Authorization || ''
     const token = String(auth).replace('Bearer ', '')
     const tokenPayload: any = verifyJWTtoken(token)
-    console.log(tokenPayload)
     return tokenPayload.auth !== 1
       ? res.status(401).json({ success: 'error', message: '身分驗證失敗，僅限管理員' })
       : next()
