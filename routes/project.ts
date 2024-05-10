@@ -373,41 +373,56 @@ router.get(
         checkList
       } = data[0]
 
+      if (userId !== req.payload.id && !checkList.some((check: any) => check.status === 1)) {
+        // 不可查看未審核通過的提案
+        return next(
+          globalError({
+            httpStatus: 404,
+            errMessage: '查無此提案'
+          })
+        )
+      }
+
+      const results: any = {
+        id: _id,
+        userId,
+        categoryKey,
+        coverUrl,
+        describe,
+        endDate,
+        title,
+        videoUrl,
+        startDate,
+        feedbackItem,
+        feedbackUrl,
+        feedbackMoney,
+        feedbackDate,
+        targetMoney,
+        teamName,
+        phone,
+        email,
+        relatedUrl,
+        introduce,
+        content,
+        achievedMoney: sponsorList.reduce((num: number, sponsor: any) => num + Number(sponsor.money), 0),
+        supportCount: sponsorList.length,
+        trackingStatus:
+          req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
+      }
+
+      if (userId.equals(new Types.ObjectId(req.payload.id))) {
+        results.checkList = checkList.map((check: any) => ({
+          content: check.content,
+          status: check.status,
+          createTime: check.createTime
+        }))
+      }
+
       responseSuccess.success({
         res,
         body: {
           message: '資料取得成功',
-          results: {
-            id: _id,
-            userId,
-            categoryKey,
-            coverUrl,
-            describe,
-            endDate,
-            title,
-            videoUrl,
-            startDate,
-            feedbackItem,
-            feedbackUrl,
-            feedbackMoney,
-            feedbackDate,
-            targetMoney,
-            teamName,
-            phone,
-            email,
-            relatedUrl,
-            introduce,
-            content,
-            achievedMoney: sponsorList.reduce((num: number, sponsor: any) => num + Number(sponsor.money), 0),
-            supportCount: sponsorList.length,
-            trackingStatus:
-              req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id))),
-            checkList: checkList.map((check: any) => ({
-              content: check.content,
-              status: check.status,
-              createTime: check.createTime
-            }))
-          }
+          results
         }
       })
       return
