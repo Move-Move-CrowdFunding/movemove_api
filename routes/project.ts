@@ -301,8 +301,7 @@ router.get(
             "content": "<p>test</p>",
             "achievedMoney": 2200,
             "supportCount": 2,
-            "trackingStatus": true,
-            "checkList": []
+            "trackingStatus": true
           }
         }
       }
@@ -373,7 +372,7 @@ router.get(
         checkList
       } = data[0]
 
-      if (userId !== req.payload.id && !checkList.some((check: any) => check.status === 1)) {
+      if (!userId.equals(new Types.ObjectId(req.payload.id)) && !checkList.some((check: any) => check.status === 1)) {
         // 不可查看未審核通過的提案
         return next(
           globalError({
@@ -408,14 +407,6 @@ router.get(
         supportCount: sponsorList.length,
         trackingStatus:
           req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
-      }
-
-      if (userId.equals(new Types.ObjectId(req.payload.id))) {
-        results.checkList = checkList.map((check: any) => ({
-          content: check.content,
-          status: check.status,
-          createTime: check.createTime
-        }))
       }
 
       responseSuccess.success({
