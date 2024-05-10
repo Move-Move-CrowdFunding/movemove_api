@@ -16,7 +16,8 @@ import authMiddleware from '../middleware/authMiddleware'
 import Project from '../models/Project'
 import User from '../models/User'
 import Sponsor from '../models/Sponsor'
-// import Track from '../models/Track'
+import Track from '../models/Track'
+import Check from '../models/Check'
 
 import moment from 'moment'
 const router = express.Router()
@@ -105,7 +106,7 @@ router.get(
         }
         },
        }
-     * #swagger.responses[400] = {
+     * #swagger.responses[404] = {
         description: '取得列表失敗',
         schema: {
           "status": "error",
@@ -157,6 +158,12 @@ router.get(
         localField: '_id',
         foreignField: 'projectId',
         as: 'trackList'
+      },
+      lookup2: {
+        from: 'checks',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'checkList'
       }
       // populate: {
       //   path: 'userId'
@@ -190,56 +197,58 @@ router.get(
         })
       )
     }
-    const results = pageData.results.map((item) => {
-      const {
-        _id,
-        introduce,
-        teamName,
-        title,
-        email,
-        categoryKey,
-        phone,
-        targetMoney,
-        content,
-        coverUrl,
-        describe,
-        videoUrl,
-        startDate,
-        endDate,
-        relatedUrl,
-        feedbackItem,
-        feedbackUrl,
-        feedbackMoney,
-        feedbackDate,
-        trackList = [],
-        sponsorList = []
-      } = item
+    const results = pageData.results
+      .filter((item) => item.checkList.length && item.checkList.some((check: any) => check.status === 1))
+      .map((item) => {
+        const {
+          _id,
+          introduce,
+          teamName,
+          title,
+          email,
+          categoryKey,
+          phone,
+          targetMoney,
+          content,
+          coverUrl,
+          describe,
+          videoUrl,
+          startDate,
+          endDate,
+          relatedUrl,
+          feedbackItem,
+          feedbackUrl,
+          feedbackMoney,
+          feedbackDate,
+          trackList = [],
+          sponsorList = []
+        } = item
 
-      return {
-        id: _id,
-        introduce,
-        teamName,
-        title,
-        email,
-        categoryKey,
-        phone,
-        achievedMoney: sponsorList.reduce((num: number, obj: any) => num + Number(obj.money), 0),
-        targetMoney,
-        content,
-        coverUrl,
-        describe,
-        videoUrl,
-        startDate,
-        endDate,
-        relatedUrl,
-        feedbackItem,
-        feedbackUrl,
-        feedbackMoney,
-        feedbackDate,
-        trackingStatus:
-          req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
-      }
-    })
+        return {
+          id: _id,
+          introduce,
+          teamName,
+          title,
+          email,
+          categoryKey,
+          phone,
+          achievedMoney: sponsorList.reduce((num: number, obj: any) => num + Number(obj.money), 0),
+          targetMoney,
+          content,
+          coverUrl,
+          describe,
+          videoUrl,
+          startDate,
+          endDate,
+          relatedUrl,
+          feedbackItem,
+          feedbackUrl,
+          feedbackMoney,
+          feedbackDate,
+          trackingStatus:
+            req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
+        }
+      })
 
     responseSuccess.success({
       res,
@@ -249,6 +258,172 @@ router.get(
         results
       }
     })
+  })
+)
+
+// 獲取單一提案
+router.get(
+  '/:id',
+  parseToken,
+  catchAll(async (req: paginationReq, res: Response, next: NextFunction) => {
+    /**
+     * #swagger.tags = ['Projects - 提案']
+     * #swagger.description = '單一提案內容'
+     * #swagger.parameters['id'] = {
+        in: 'path',
+        description: '提案 id'
+       }
+     * #swagger.responses[200] = {
+        description: '單一提案獲取成功',
+        schema: {
+          "status": "success",
+          "message": "取得募資列表成功",
+          "results": {
+            "id": "663e3f9652027aeb86960016",
+            "userId": "663e3f3452027aeb8696000c",
+            "categoryKey": 2,
+            "coverUrl": "https://fakeimg.pl/300/",
+            "describe": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。",
+            "endDate": 1721577600,
+            "title": "2",
+            "videoUrl": "",
+            "startDate": 1720713600,
+            "feedbackItem": "限量精美小熊維尼",
+            "feedbackUrl": "https://fakeimg.pl/300/",
+            "feedbackMoney": 100,
+            "feedbackDate": 1721577600,
+            "targetMoney": 30000,
+            "teamName": "弱勢救星",
+            "phone": "0938938438",
+            "email": "nomail@mail.com",
+            "relatedUrl": "",
+            "introduce": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。",
+            "content": "<p>test</p>",
+            "achievedMoney": 2200,
+            "supportCount": 2,
+            "trackingStatus": true
+          }
+        }
+      }
+      * #swagger.responses[404] = {
+        description: '取得提案失敗',
+        schema: {
+          "status": "error",
+          "message": "查無此提案"
+        },
+      }
+     */
+    const data = await Project.aggregate([
+      {
+        $match: {
+          _id: new Types.ObjectId(req.params.id)
+        }
+      },
+      {
+        $lookup: {
+          from: 'sponsors',
+          localField: '_id',
+          foreignField: 'projectId',
+          as: 'sponsorList'
+        }
+      },
+      {
+        $lookup: {
+          from: 'tracks',
+          localField: '_id',
+          foreignField: 'projectId',
+          as: 'trackList'
+        }
+      },
+      {
+        $lookup: {
+          from: 'checks',
+          localField: '_id',
+          foreignField: 'projectId',
+          as: 'checkList'
+        }
+      }
+    ])
+
+    if (data.length) {
+      const {
+        _id,
+        userId,
+        categoryKey,
+        coverUrl,
+        describe,
+        endDate,
+        title,
+        videoUrl,
+        startDate,
+        feedbackItem,
+        feedbackUrl,
+        feedbackMoney,
+        feedbackDate,
+        targetMoney,
+        teamName,
+        phone,
+        email,
+        relatedUrl,
+        introduce,
+        content,
+        sponsorList,
+        trackList,
+        checkList
+      } = data[0]
+
+      if (!userId.equals(new Types.ObjectId(req.payload.id)) && !checkList.some((check: any) => check.status === 1)) {
+        // 不可查看未審核通過的提案
+        return next(
+          globalError({
+            httpStatus: 404,
+            errMessage: '查無此提案'
+          })
+        )
+      }
+
+      const results: any = {
+        id: _id,
+        userId,
+        categoryKey,
+        coverUrl,
+        describe,
+        endDate,
+        title,
+        videoUrl,
+        startDate,
+        feedbackItem,
+        feedbackUrl,
+        feedbackMoney,
+        feedbackDate,
+        targetMoney,
+        teamName,
+        phone,
+        email,
+        relatedUrl,
+        introduce,
+        content,
+        achievedMoney: sponsorList.reduce((num: number, sponsor: any) => num + Number(sponsor.money), 0),
+        supportCount: sponsorList.length,
+        trackingStatus:
+          req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
+      }
+
+      responseSuccess.success({
+        res,
+        body: {
+          message: '資料取得成功',
+          results
+        }
+      })
+      return
+    }
+    next(
+      globalError({
+        httpStatus: 404,
+        errMessage: '查無此提案'
+      })
+    )
   })
 )
 
@@ -431,6 +606,7 @@ router.post(
   })
 )
 
+// 測試用 API
 router.delete(
   '/all',
   catchAll(async (req: Request, res: Response) => {
@@ -456,17 +632,17 @@ router.delete(
   })
 )
 
-router.post(
-  '/test',
-  catchAll(async (req: paginationReq, res: Response) => {
-    await Sponsor.create({ ...req.body })
-    responseSuccess.success({
-      res,
-      body: {
-        message: '成功'
-      }
-    })
-  })
-)
+// router.post(
+//   '/test',
+//   catchAll(async (req: paginationReq, res: Response) => {
+//     await Check.create({ ...req.body })
+//     responseSuccess.success({
+//       res,
+//       body: {
+//         message: '成功'
+//       }
+//     })
+//   })
+// )
 
 export default router

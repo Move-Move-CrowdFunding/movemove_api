@@ -42,7 +42,7 @@
                   "type": "string",
                   "example": "abc123456"
                 },
-                "niclName": {
+                "nickName": {
                   "type": "string",
                   "example": "elsa"
                 }
@@ -288,7 +288,7 @@
         ],
         "responses": {
           "200": {
-            "description": "登入成功",
+            "description": "成功取得會員資料",
             "schema": {
               "type": "object",
               "properties": {
@@ -384,6 +384,166 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "description": "修改會員資料",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "description": "Bearer token",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "修改會員資料<br>*只會更新body有帶的key",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nickName": {
+                  "type": "string",
+                  "example": "Elsa"
+                },
+                "userName": {
+                  "type": "string",
+                  "example": ""
+                },
+                "gender": {
+                  "type": "number",
+                  "example": 0
+                },
+                "phone": {
+                  "type": "string",
+                  "example": ""
+                },
+                "address": {
+                  "type": "string",
+                  "example": ""
+                },
+                "teamName": {
+                  "type": "string",
+                  "example": ""
+                },
+                "aboutMe": {
+                  "type": "string",
+                  "example": ""
+                },
+                "avatar": {
+                  "type": "string",
+                  "example": ""
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "修改會員資料",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "修改會員資料成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "string",
+                      "example": "elsa@gmail.com"
+                    },
+                    "auth": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "nickName": {
+                      "type": "string",
+                      "example": "Elsa"
+                    },
+                    "userName": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "gender": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "teamName": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "aboutMe": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "avatar": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "createTime": {
+                      "type": "number",
+                      "example": 1715098808
+                    },
+                    "updateTime": {
+                      "type": "number",
+                      "example": 1715098808
+                    },
+                    "id": {
+                      "type": "string",
+                      "example": "663a54b8c9225d0f16b55020"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "修改會員資料失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "無此會員 || 修改失敗"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           }
         },
         "security": [
@@ -540,6 +700,10 @@
                       "achievedMoney": {
                         "type": "number",
                         "example": 0
+                      },
+                      "trackingStatus": {
+                        "type": "boolean",
+                        "example": false
                       }
                     }
                   }
@@ -579,7 +743,7 @@
               }
             }
           },
-          "400": {
+          "404": {
             "description": "取得列表失敗",
             "schema": {
               "type": "object",
@@ -598,12 +762,7 @@
               }
             }
           }
-        },
-        "security": [
-          {
-            "token": []
-          }
-        ]
+        }
       },
       "post": {
         "tags": [
@@ -760,6 +919,160 @@
         ]
       }
     },
+    "/project/{id}": {
+      "get": {
+        "tags": [
+          "Projects - 提案"
+        ],
+        "description": "單一提案內容",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "提案 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "單一提案獲取成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得募資列表成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "663e3f9652027aeb86960016"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "example": "663e3f3452027aeb8696000c"
+                    },
+                    "categoryKey": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "coverUrl": {
+                      "type": "string",
+                      "example": "https://fakeimg.pl/300/"
+                    },
+                    "describe": {
+                      "type": "string",
+                      "example": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。"
+                    },
+                    "endDate": {
+                      "type": "number",
+                      "example": 1721577600
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "2"
+                    },
+                    "videoUrl": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "startDate": {
+                      "type": "number",
+                      "example": 1720713600
+                    },
+                    "feedbackItem": {
+                      "type": "string",
+                      "example": "限量精美小熊維尼"
+                    },
+                    "feedbackUrl": {
+                      "type": "string",
+                      "example": "https://fakeimg.pl/300/"
+                    },
+                    "feedbackMoney": {
+                      "type": "number",
+                      "example": 100
+                    },
+                    "feedbackDate": {
+                      "type": "number",
+                      "example": 1721577600
+                    },
+                    "targetMoney": {
+                      "type": "number",
+                      "example": 30000
+                    },
+                    "teamName": {
+                      "type": "string",
+                      "example": "弱勢救星"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "0938938438"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "nomail@mail.com"
+                    },
+                    "relatedUrl": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "introduce": {
+                      "type": "string",
+                      "example": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。"
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "<p>test</p>"
+                    },
+                    "achievedMoney": {
+                      "type": "number",
+                      "example": 2200
+                    },
+                    "supportCount": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "trackingStatus": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "取得提案失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "查無此提案"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        }
+      }
+    },
     "/project/all": {
       "delete": {
         "tags": [
@@ -785,6 +1098,16 @@
                 "name": "main"
               }
             }
+          }
+        }
+      }
+    },
+    "/project/test": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
           }
         }
       }
