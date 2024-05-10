@@ -10,6 +10,7 @@ import cors from 'cors'
 import userRouter from './routes/users'
 import projectRouter from './routes/project'
 import uploadRouter from './routes/upload'
+import adminRouter from './routes/admin'
 
 // Swagger 使用
 import swaggerUi from 'swagger-ui-express'
@@ -40,10 +41,10 @@ app.use(cors())
 
 // app.use(loggingMiddleware)
 
-
 app.use('/user', userRouter)
 app.use('/project', projectRouter)
 app.use('/upload', uploadRouter)
+app.use('/admin', adminRouter)
 
 // 404 路由
 app.use((req: Request, res: Response) => {
