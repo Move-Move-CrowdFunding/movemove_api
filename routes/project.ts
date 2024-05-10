@@ -17,6 +17,7 @@ import Project from '../models/Project'
 import User from '../models/User'
 import Sponsor from '../models/Sponsor'
 import Track from '../models/Track'
+import Check from '../models/Check'
 
 import moment from 'moment'
 const router = express.Router()
@@ -157,6 +158,12 @@ router.get(
         localField: '_id',
         foreignField: 'projectId',
         as: 'trackList'
+      },
+      lookup2: {
+        from: 'checks',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'checkList'
       }
       // populate: {
       //   path: 'userId'
@@ -190,56 +197,58 @@ router.get(
         })
       )
     }
-    const results = pageData.results.map((item) => {
-      const {
-        _id,
-        introduce,
-        teamName,
-        title,
-        email,
-        categoryKey,
-        phone,
-        targetMoney,
-        content,
-        coverUrl,
-        describe,
-        videoUrl,
-        startDate,
-        endDate,
-        relatedUrl,
-        feedbackItem,
-        feedbackUrl,
-        feedbackMoney,
-        feedbackDate,
-        trackList = [],
-        sponsorList = []
-      } = item
+    const results = pageData.results
+      .filter((item) => item.checkList.length && item.checkList.some((check: any) => check.status === 1))
+      .map((item) => {
+        const {
+          _id,
+          introduce,
+          teamName,
+          title,
+          email,
+          categoryKey,
+          phone,
+          targetMoney,
+          content,
+          coverUrl,
+          describe,
+          videoUrl,
+          startDate,
+          endDate,
+          relatedUrl,
+          feedbackItem,
+          feedbackUrl,
+          feedbackMoney,
+          feedbackDate,
+          trackList = [],
+          sponsorList = []
+        } = item
 
-      return {
-        id: _id,
-        introduce,
-        teamName,
-        title,
-        email,
-        categoryKey,
-        phone,
-        achievedMoney: sponsorList.reduce((num: number, obj: any) => num + Number(obj.money), 0),
-        targetMoney,
-        content,
-        coverUrl,
-        describe,
-        videoUrl,
-        startDate,
-        endDate,
-        relatedUrl,
-        feedbackItem,
-        feedbackUrl,
-        feedbackMoney,
-        feedbackDate,
-        trackingStatus:
-          req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
-      }
-    })
+        return {
+          id: _id,
+          introduce,
+          teamName,
+          title,
+          email,
+          categoryKey,
+          phone,
+          achievedMoney: sponsorList.reduce((num: number, obj: any) => num + Number(obj.money), 0),
+          targetMoney,
+          content,
+          coverUrl,
+          describe,
+          videoUrl,
+          startDate,
+          endDate,
+          relatedUrl,
+          feedbackItem,
+          feedbackUrl,
+          feedbackMoney,
+          feedbackDate,
+          trackingStatus:
+            req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
+        }
+      })
 
     responseSuccess.success({
       res,
@@ -292,7 +301,8 @@ router.get(
             "content": "<p>test</p>",
             "achievedMoney": 2200,
             "supportCount": 2,
-            "trackingStatus": true
+            "trackingStatus": true,
+            "checkList": []
           }
         }
       }
@@ -325,6 +335,14 @@ router.get(
           foreignField: 'projectId',
           as: 'trackList'
         }
+      },
+      {
+        $lookup: {
+          from: 'checks',
+          localField: '_id',
+          foreignField: 'projectId',
+          as: 'checkList'
+        }
       }
     ])
 
@@ -351,8 +369,10 @@ router.get(
         introduce,
         content,
         sponsorList,
-        trackList
+        trackList,
+        checkList
       } = data[0]
+
       responseSuccess.success({
         res,
         body: {
@@ -381,7 +401,12 @@ router.get(
             achievedMoney: sponsorList.reduce((num: number, sponsor: any) => num + Number(sponsor.money), 0),
             supportCount: sponsorList.length,
             trackingStatus:
-              req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
+              req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id))),
+            checkList: checkList.map((check: any) => ({
+              content: check.content,
+              status: check.status,
+              createTime: check.createTime
+            }))
           }
         }
       })
@@ -604,7 +629,7 @@ router.delete(
 // router.post(
 //   '/test',
 //   catchAll(async (req: paginationReq, res: Response) => {
-//     await Track.create({ ...req.body })
+//     await Check.create({ ...req.body })
 //     responseSuccess.success({
 //       res,
 //       body: {
