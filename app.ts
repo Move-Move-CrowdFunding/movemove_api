@@ -40,7 +40,6 @@ app.use(cors())
 
 // app.use(loggingMiddleware)
 
-
 app.use('/user', userRouter)
 app.use('/project', projectRouter)
 app.use('/upload', uploadRouter)
@@ -77,6 +76,14 @@ app.use((err: errorTask, req: Request, res: Response, next: NextFunction) => {
     } else {
       err.message = '參數錯誤'
     }
+    return responseError.error_production(err, res)
+  }
+  console.log(err.name)
+
+  if (err.name === 'BSONError') {
+    err.isOperational = true
+    err.httpStatus = 400
+    err.message = 'id 編碼錯誤'
     return responseError.error_production(err, res)
   }
 
