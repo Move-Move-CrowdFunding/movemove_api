@@ -2,11 +2,12 @@ import express from 'express'
 import multer from 'multer'
 import fs from 'fs'
 import { ImgurClient } from 'imgur'
+import authMiddleware from '../middleware/authMiddleware'
 
 const router = express.Router()
 
-// 上傳圖片API /upload TODO: 身份驗證
-router.post('/', async (req, res) => {
+// 上傳圖片API /upload
+router.post('/', authMiddleware, async (req, res) => {
   /**
    * #swagger.autoBody: false
    * #swagger.consumes = ['multipart/form-data']
@@ -109,8 +110,8 @@ router.post('/', async (req, res) => {
     })
   } catch (error) {
     return res.status(500).json({
-      message: '伺服器錯誤',
-      status: 'error'
+      status: 'error',
+      message: '伺服器錯誤'
     })
   }
 })
