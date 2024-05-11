@@ -1102,16 +1102,6 @@
         }
       }
     },
-    "/project/test": {
-      "post": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/upload/": {
       "post": {
         "tags": [
@@ -1172,6 +1162,170 @@
           }
         ],
         "autoBody": true
+      }
+    },
+    "/member/project/{id}": {
+      "get": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "我的單一提案內容",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "提案 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取得我的單一提案內容",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得提案內容成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "663e3f9652027aeb86960016"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "example": "663e3f3452027aeb8696000c"
+                    },
+                    "categoryKey": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "coverUrl": {
+                      "type": "string",
+                      "example": "https://fakeimg.pl/300/"
+                    },
+                    "describe": {
+                      "type": "string",
+                      "example": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。"
+                    },
+                    "endDate": {
+                      "type": "number",
+                      "example": 1721577600
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "2"
+                    },
+                    "videoUrl": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "startDate": {
+                      "type": "number",
+                      "example": 1720713600
+                    },
+                    "feedbackItem": {
+                      "type": "string",
+                      "example": "限量精美小熊維尼"
+                    },
+                    "feedbackUrl": {
+                      "type": "string",
+                      "example": "https://fakeimg.pl/300/"
+                    },
+                    "feedbackMoney": {
+                      "type": "number",
+                      "example": 100
+                    },
+                    "feedbackDate": {
+                      "type": "number",
+                      "example": 1721577600
+                    },
+                    "targetMoney": {
+                      "type": "number",
+                      "example": 30000
+                    },
+                    "teamName": {
+                      "type": "string",
+                      "example": "弱勢救星"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "0938938438"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "nomail@mail.com"
+                    },
+                    "relatedUrl": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "introduce": {
+                      "type": "string",
+                      "example": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。"
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "<p>test</p>"
+                    },
+                    "achievedMoney": {
+                      "type": "number",
+                      "example": 2200
+                    },
+                    "supportCount": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "trackingStatus": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "state": {
+                      "type": "array",
+                      "example": [],
+                      "items": {}
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "404": {
+            "description": "查無此提案",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "查無此提案"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
       }
     }
   }

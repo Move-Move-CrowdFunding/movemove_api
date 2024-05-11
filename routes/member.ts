@@ -20,6 +20,9 @@ router.get(
     /**
      * #swagger.tags = ['Member - 會員中心']
      * #swagger.description = '我的單一提案內容'
+     * #swagger.security = [{
+        token: []
+       }]
      * #swagger.parameters['id'] = {
         in: 'path',
         description: '提案 id'

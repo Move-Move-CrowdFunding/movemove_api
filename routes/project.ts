@@ -9,6 +9,7 @@ import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
 
 import pagination from '../utils/pagination'
+import createCheck from '../utils/createCheck'
 
 import parseToken from '../middleware/parseToken'
 import authMiddleware from '../middleware/authMiddleware'
@@ -575,7 +576,7 @@ router.post(
       )
     }
 
-    await Project.create({
+    const project = await Project.create({
       userId: (req as tokenInfo).user.id,
       introduce,
       teamName,
@@ -596,6 +597,23 @@ router.post(
       feedbackMoney,
       feedbackDate
     })
+
+    const checkData = await createCheck({
+      projectId: project._id,
+      content: '',
+      status: 0,
+      next
+    })
+
+    if (!checkData) {
+      await Project.findByIdAndDelete(project._id)
+      return next(
+        globalError({
+          httpStatus: 404,
+          errMessage: '資料新增失敗'
+        })
+      )
+    }
 
     responseSuccess.success({
       res,
