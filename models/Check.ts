@@ -7,7 +7,8 @@ const schema = {
     required: [true, '請輸入提案id']
   },
   content: {
-    type: String
+    type: String,
+    default: ''
   },
   status: {
     type: Number,

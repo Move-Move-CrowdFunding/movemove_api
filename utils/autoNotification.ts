@@ -44,8 +44,6 @@ const autoNotification = async ({
     if (!project) {
       return next(globalError({ httpStatus: 404, errMessage: '查無此提案' }))
     } else {
-      console.log(project)
-
       finalContent = content.replace('<projectName>', project.title)
     }
   }

@@ -25,15 +25,18 @@ const schema = {
   },
   receiver: {
     type: String,
-    required: [false, '請輸入收件人名稱']
+    required: [false, '請輸入收件人名稱'],
+    default: ''
   },
   receiverPhone: {
     type: String,
-    required: [false, '請輸入收件人電話']
+    required: [false, '請輸入收件人電話'],
+    default: ''
   },
   address: {
     type: String,
-    required: [false, '請輸入收件地址']
+    required: [false, '請輸入收件地址'],
+    default: ''
   },
   isNeedFeedback: {
     type: Boolean,
