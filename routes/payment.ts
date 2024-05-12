@@ -1,47 +1,81 @@
 import express, { Request, Response, NextFunction } from 'express'
 import responseSuccess from '../service/responseSuccess'
 import crypto from 'crypto'
+import querystring from 'querystring'
+import requiredRules from '../utils/requiredRules'
 
 import authMiddleware from '../middleware/authMiddleware'
 import catchAll from '../service/catchAll'
 
 import tokenInfo from '../interface/tokenInfo'
+import globalError from '../service/globalError'
 
 import Sponsor from '../models/Sponsor'
+import Project from '../models/Project'
 
 const router = express.Router()
 
+const order: any = {}
 // 支持提案 - 建立訂單
 router.post(
   '/support',
   authMiddleware,
-  catchAll(async (req: Request, res: Response) => {
-    const { projectId, money, username, phone, receiver, receiverPhone, address, isNeedFeedback } = req.body
+  catchAll(async (req: Request, res: Response, next: NextFunction) => {
+    const { projectId, money, userName, phone, receiver, receiverPhone, address, isNeedFeedback } = req.body
 
-    const sponsorData = await Sponsor.create({
+    const requiredError: string[] = requiredRules({
+      req,
+      params: ['projectId', 'money', 'userName', 'phone', 'isNeedFeedback'],
+      messageArea: 'payment'
+    })
+    if (requiredError.length) {
+      return next(
+        globalError({
+          errMessage: requiredError[0]
+        })
+      )
+    }
+
+    if (isNeedFeedback) {
+      const feedbackErr: string[] = requiredRules({
+        req,
+        params: ['receiver', 'receiverPhone', 'address'],
+        messageArea: 'payment'
+      })
+      if (feedbackErr.length) {
+        return next(
+          globalError({
+            errMessage: feedbackErr[0]
+          })
+        )
+      }
+    }
+    const checkProject = await Project.findById(projectId)
+    if (!checkProject) {
+      return next(
+        globalError({
+          httpStatus: 404,
+          errMessage: '查無該提案'
+        })
+      )
+    }
+
+    const sponsorData = {
       userId: (req as tokenInfo).user.id,
       projectId,
       money,
-      username,
+      userName,
       phone,
       receiver,
       receiverPhone,
       address,
-      isNeedFeedback
-    })
-    // const sponsorData = {
-    //   projectId,
-    //   money,
-    //   username,
-    //   phone,
-    //   receiver,
-    //   receiverPhone,
-    //   address,
-    //   isNeedFeedback
-    // }
+      isNeedFeedback,
+      MerchantOrderNo: String(Date.now())
+    }
     const aesEncrypt = createAesEncrypt(sponsorData)
     const shaEncrypt = createShaEncrypt(aesEncrypt)
 
+    order[sponsorData.MerchantOrderNo] = sponsorData
     responseSuccess.success({
       res,
       body: {
@@ -56,18 +90,21 @@ router.post(
 
 router.post(
   '/notify',
-  authMiddleware,
   catchAll(async (req: Request, res: Response) => {
-    console.log('req', req)
-    console.log('body', req.body)
     const info = parseAes(req.body.TradeInfo)
-    console.log('info', info)
+    const orderDate = order[info.MerchantOrderNo]
 
-    // const projectId = info.Result.MerchantOrderNo
-    // const sponsorData = await Sponsor.create({
-    //   userId: (req as tokenInfo).user.id,
-    //   ...req.body
-    // })
+    await Sponsor.create({
+      userId: orderDate.userId,
+      projectId: orderDate.projectId,
+      money: orderDate.money,
+      userName: orderDate.userName,
+      phone: orderDate.phone,
+      receiver: orderDate.receiver,
+      receiverPhone: orderDate.receiverPhone,
+      address: orderDate.address,
+      isNeedFeedback: orderDate.isNeedFeedback
+    })
 
     res.end()
   })
@@ -80,17 +117,18 @@ function genDataChain(sponsorData: any) {
   const data = {
     RespondType: 'JSON', // 回傳格式
     MerchantID: MERCHANT_ID, // 商店編碼
-    TimeStamp: sponsorData.createTime, // 時間戳記(秒)
+    TimeStamp: Math.ceil(Date.now() / 1000), // 時間戳記(秒)
     Version: VERSION, // 串接程式版本
-    MerchantOrderNo: sponsorData._id, // 商店訂單編號
+    MerchantOrderNo: sponsorData.MerchantOrderNo, // 商店訂單編號
     Amt: sponsorData.money, // 訂單金額
-    ItemDesc: sponsorData.projectId, // 商品資訊(限長50),
+    ItemDesc: '公益募捐', // 商品資訊(限長50),
     NotifyURL: NOTIFY_URL
   }
 
   const str = Object.keys(data)
     .map((key: string) => `${key}=${(data as any)[key]}`)
     .join('&')
+
   return str
 }
 // 使用 aes 加密 => 交易資料加密
@@ -121,6 +159,10 @@ function parseAes(TradeInfo: any) {
   const text = decrypt.update(TradeInfo, 'hex', 'utf8')
   const plainText = text + decrypt.final('utf8')
   const result = plainText.replace(/[\x00-\x20]+/g, '')
-  return JSON.parse(result)
+  if (typeof result === 'string') {
+    return querystring.parse(result)
+  } else {
+    return JSON.parse(result)
+  }
 }
 export default router
