@@ -12,6 +12,7 @@ import projectRouter from './routes/project'
 import uploadRouter from './routes/upload'
 import adminRouter from './routes/admin'
 import memberRouter from './routes/member'
+import paymentRouter from './routes/payment'
 
 // Swagger 使用
 import swaggerUi from 'swagger-ui-express'
@@ -47,6 +48,7 @@ app.use('/project', projectRouter)
 app.use('/upload', uploadRouter)
 app.use('/admin', adminRouter)
 app.use('/member', memberRouter)
+app.use('/payment', paymentRouter)
 
 // 404 路由
 app.use((req: Request, res: Response) => {

@@ -19,7 +19,6 @@ import User from '../models/User'
 import Sponsor from '../models/Sponsor'
 import Track from '../models/Track'
 import Check from '../models/Check'
-
 import moment from 'moment'
 const router = express.Router()
 
@@ -251,12 +250,17 @@ router.get(
         }
       })
 
+    const count = await (Check as any).find({ status: 1 }).count()
+
     responseSuccess.success({
       res,
       body: {
         message: '取得募資列表成功',
-        ...pageData,
-        results
+        results,
+        pagination: {
+          ...pageData.pagination,
+          count
+        }
       }
     })
   })
@@ -428,6 +432,7 @@ router.get(
   })
 )
 
+// 發起提案
 router.post(
   '/',
   authMiddleware,
