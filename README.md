@@ -73,7 +73,23 @@ http://localhost:3000/api-docs
 PORT=
 MONGODB_URL= # MongoDB 資料庫網址
 MONGODB_PASSWORD= # MongoDB 密碼
+
 SWAGGER_HOST= # Swagger base url
+SWAGGER_SCHEMES= # Swagger 連接 schemes, 'http' or 'https'
+
+IMGUR_ALBUM_ID=
+IMGUR_CLIENTID=
+IMGUR_CLIENT_SECRET=
+IMGUR_REFRESH_TOKEN=
+
+JWT_SECRET_KEY=
+
+HASH_KEY= # 藍新金流 HashKey
+HASH_IV= # 藍新金流 HashIV
+MERCHANT_ID= # 藍新金流 商店代號
+VERSION= # 藍新金流 串接版本號, 當前使用 '2.0'
+NOTIFY_URL={API_URL}/payment/notify # 藍新金流 後端成功 Notify URL
+RETURN_URL= # 藍新金流 前端成功 Return URL
 ...
 ```
 
