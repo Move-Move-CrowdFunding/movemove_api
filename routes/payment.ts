@@ -1,14 +1,15 @@
 import express, { Request, Response, NextFunction } from 'express'
-import responseSuccess from '../service/responseSuccess'
 import crypto from 'crypto'
-import querystring from 'querystring'
+
+import responseSuccess from '../service/responseSuccess'
+import catchAll from '../service/catchAll'
+import globalError from '../service/globalError'
+
 import requiredRules from '../utils/requiredRules'
 
 import authMiddleware from '../middleware/authMiddleware'
-import catchAll from '../service/catchAll'
 
 import tokenInfo from '../interface/tokenInfo'
-import globalError from '../service/globalError'
 
 import Sponsor from '../models/Sponsor'
 import Project from '../models/Project'
@@ -21,6 +22,61 @@ router.post(
   '/support',
   authMiddleware,
   catchAll(async (req: Request, res: Response, next: NextFunction) => {
+    /**
+     * #swagger.tags = ['Payment - 金流']
+     * #swagger.description = '支持提案'
+     * #swagger.security = [{
+        token: []
+       }]
+     * #swagger.parameters['body'] = {
+        in: 'body',
+        description: '支持提案格式',
+        type: 'object',
+        required: true,
+        schema: {
+          $projectId: '66401d4618d9a03d581946fc',
+          $money: 10,
+          $userName: '贊助者名稱',
+          $phone: '贊助者聯絡電話',
+          $isNeedFeedback: true,
+          receiver: '收件人名稱',
+          receiverPhone: '收件人電話',
+          address: '地址'
+        }
+      }
+     * #swagger.responses[200] = {
+        description: '取得加密資料成功',
+        schema: {
+          "status": "success",
+          "message": "取得加密資料",
+          "results": {
+            "TradeInfo": "342a0f755eb8cb4c92d057c7072633b69a4e662b83ffcdb38990e5aecd6991ec8c40bff9112140a7b8d0dd9c5b39bd54eb387a26bf703e4ad7ef02fc3fc611f85dc5eaa15ffde3d2cc53fd6d26fc6dac2e17d08afbfff53c1f895ee96bcba6c79e7678106762cd187b60b2a38dcf4d76d1be913305a764a5164b372249bf6ade4b2a17ef7bcb3d4d909a03fdaaa1ff28f0c2bab66f571f99a541f0b819d760683a2403aaad509aefd1b4471df5a899838a2dc6937242087150fc7f935783352e",
+            "TradeSha": "0FE6C4C7A9AF2AD81F2B4A058F325EBD1E526E8EFECF73006D907C29687F26E0",
+            "sponsorData": {
+                "userId": "663a45cef10294434f0141b0",
+                "projectId": "66401d4618d9a03d581946fc",
+                "money": 10,
+                "userName": "藍新測試",
+                "phone": "0982718293",
+                "receiver": "收件人名稱",
+                "receiverPhone": "收件人電話",
+                "address": "地址",
+                "isNeedFeedback": true,
+                "MerchantOrderNo": "1715528610495",
+                "TimeStamp": 1715528611
+            }
+          }
+        },
+       }
+     * #swagger.responses[400] = {
+        description: '支持提案失敗',
+        schema: {
+          "status": "error",
+          "message": "查無該提案"
+        },
+       }
+     *
+     */
     const { projectId, money, userName, phone, receiver, receiverPhone, address, isNeedFeedback } = req.body
 
     const requiredError: string[] = requiredRules({
@@ -70,7 +126,8 @@ router.post(
       receiverPhone,
       address,
       isNeedFeedback,
-      MerchantOrderNo: String(Date.now())
+      MerchantOrderNo: String(Date.now()),
+      TimeStamp: Math.ceil(Date.now() / 1000)
     }
     const aesEncrypt = createAesEncrypt(sponsorData)
     const shaEncrypt = createShaEncrypt(aesEncrypt)
@@ -80,9 +137,11 @@ router.post(
       res,
       body: {
         message: '取得加密資料',
-        aesEncrypt,
-        shaEncrypt,
-        sponsorData
+        results: {
+          TradeInfo: aesEncrypt,
+          TradeSha: shaEncrypt,
+          data: sponsorData
+        }
       }
     })
   })
@@ -90,7 +149,12 @@ router.post(
 
 router.post(
   '/notify',
-  catchAll(async (req: Request, res: Response) => {
+  catchAll(async (req: Request, res: Response, next: NextFunction) => {
+    /**
+     * #swagger.tags = ['Payment - 金流']
+     * #swagger.description = 'notify'
+     * #swagger.ignore = true
+     */
     // 成功格式
     // const data = {
     //   Status: 'SUCCESS',
@@ -105,6 +169,15 @@ router.post(
 
     const orderDate = order[info.Result.MerchantOrderNo]
 
+    if (!orderDate) {
+      return next(
+        globalError({
+          httpStatus: 404,
+          errMessage: '查無該訂單'
+        })
+      )
+    }
+
     await Sponsor.create({
       userId: orderDate.userId,
       projectId: orderDate.projectId,
@@ -116,6 +189,8 @@ router.post(
       address: orderDate.address,
       isNeedFeedback: orderDate.isNeedFeedback
     })
+
+    delete order[info.Result.MerchantOrderNo]
 
     responseSuccess.success({
       res,
@@ -133,7 +208,7 @@ function genDataChain(sponsorData: any) {
   const data = {
     RespondType: 'JSON', // 回傳格式
     MerchantID: MERCHANT_ID, // 商店編碼
-    TimeStamp: Math.ceil(Date.now() / 1000), // 時間戳記(秒)
+    TimeStamp: sponsorData.TimeStamp, // 時間戳記(秒)
     Version: VERSION, // 串接程式版本
     MerchantOrderNo: sponsorData.MerchantOrderNo, // 商店訂單編號
     Amt: sponsorData.money, // 訂單金額
