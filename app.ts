@@ -7,6 +7,7 @@ import type errorTask from './interface/errorTask'
 import responseError from './service/responseError'
 import cors from 'cors'
 
+import homeRouter from './routes/index'
 import userRouter from './routes/users'
 import projectRouter from './routes/project'
 import uploadRouter from './routes/upload'
@@ -43,6 +44,7 @@ app.use(cors())
 
 // app.use(loggingMiddleware)
 
+app.use('/home', homeRouter)
 app.use('/user', userRouter)
 app.use('/project', projectRouter)
 app.use('/upload', uploadRouter)
