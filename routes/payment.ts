@@ -16,12 +16,10 @@ router.post(
   '/support',
   authMiddleware,
   catchAll(async (req: Request, res: Response) => {
-    // const sponsorData = await Sponsor.create({
-    //   userId: (req as tokenInfo).user.id,
-    //   ...req.body
-    // })
     const { projectId, money, username, phone, receiver, receiverPhone, address, isNeedFeedback } = req.body
-    const sponsorData = {
+
+    const sponsorData = await Sponsor.create({
+      userId: (req as tokenInfo).user.id,
       projectId,
       money,
       username,
@@ -30,7 +28,17 @@ router.post(
       receiverPhone,
       address,
       isNeedFeedback
-    }
+    })
+    // const sponsorData = {
+    //   projectId,
+    //   money,
+    //   username,
+    //   phone,
+    //   receiver,
+    //   receiverPhone,
+    //   address,
+    //   isNeedFeedback
+    // }
     const aesEncrypt = createAesEncrypt(sponsorData)
     const shaEncrypt = createShaEncrypt(aesEncrypt)
 
@@ -39,7 +47,8 @@ router.post(
       body: {
         message: '取得加密資料',
         aesEncrypt,
-        shaEncrypt
+        shaEncrypt,
+        sponsorData
       }
     })
   })
@@ -49,6 +58,8 @@ router.post(
   '/notify',
   authMiddleware,
   catchAll(async (req: Request, res: Response) => {
+    console.log('req', req)
+    console.log('body', req.body)
     const info = parseAes(req.body.TradeInfo)
     console.log('info', info)
 
@@ -71,9 +82,9 @@ function genDataChain(sponsorData: any) {
     MerchantID: MERCHANT_ID, // 商店編碼
     TimeStamp: sponsorData.createTime, // 時間戳記(秒)
     Version: VERSION, // 串接程式版本
-    MerchantOrderNo: sponsorData.projectId, // 商店訂單編號
+    MerchantOrderNo: sponsorData._id, // 商店訂單編號
     Amt: sponsorData.money, // 訂單金額
-    ItemDesc: '支持提案', // 商品資訊(限長50),
+    ItemDesc: sponsorData.projectId, // 商品資訊(限長50),
     NotifyURL: NOTIFY_URL
   }
 
