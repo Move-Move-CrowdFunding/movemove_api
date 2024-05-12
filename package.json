@@ -19,6 +19,7 @@
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
+    "crypto": "^1.0.1",
     "debug": "~2.6.9",
     "dotenv": "^16.4.5",
     "eslint-config-standard": "^17.1.0",
