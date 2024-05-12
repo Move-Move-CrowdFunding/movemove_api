@@ -15,7 +15,7 @@ const schema = {
     type: Number,
     required: [true, '請輸入贊助金額']
   },
-  username: {
+  userName: {
     type: String,
     required: [true, '請輸入贊助者名稱']
   },

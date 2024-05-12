@@ -12,6 +12,16 @@ const requiredMessage: { [key: string]: any } = {
     describe: '請輸入提案簡介',
     coverUrl: '請上傳封面',
     content: '請輸入內容'
+  },
+  payment: {
+    projectId: '請輸入提案id',
+    money: '請輸入贊助金額',
+    userName: '請輸入贊助者名稱',
+    phone: '請輸入贊助者聯絡電話',
+    isNeedFeedback: '是否需要回饋品',
+    receiver: '請輸入收件人名稱',
+    receiverPhone: '請輸入收件人電話',
+    address: '請輸入收件地址'
   }
 }
 
