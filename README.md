@@ -1,6 +1,5 @@
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white) | ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white) | ![mongodb](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
 
-
 # 封面
 
 ![專案封面圖](https://fakeimg.pl/500/)
@@ -9,11 +8,9 @@
 
 - [線上觀看連結](https://google.com/)
 
-
-
 ## 功能
 
-測試帳號密碼 
+測試帳號密碼
 
 ```bash
 帳號： example@example.com
@@ -22,7 +19,6 @@
 
 - [] 登入
 - [] 登出
-
 
 ## 安裝
 
@@ -63,6 +59,7 @@ http://localhost:3000/
 ```
 
 ### swagger 文件
+
 ```bash
 http://localhost:3000/api-docs
 ```
@@ -77,12 +74,12 @@ MONGODB_PASSWORD= # MongoDB 密碼
 SWAGGER_HOST= # Swagger base url
 SWAGGER_SCHEMES= # Swagger 連接 schemes, 'http' or 'https'
 
-IMGUR_ALBUM_ID=
-IMGUR_CLIENTID=
-IMGUR_CLIENT_SECRET=
-IMGUR_REFRESH_TOKEN=
+IMGUR_ALBUM_ID= # Imgur 相簿 Album ID
+IMGUR_CLIENTID= # Imgur API 串接 Client ID
+IMGUR_CLIENT_SECRET= # Imgur API 串接 Client Secret
+IMGUR_REFRESH_TOKEN= # Imgur API 串接 Token
 
-JWT_SECRET_KEY=
+JWT_SECRET_KEY= # JWT TOKEN 加密私鑰
 
 HASH_KEY= # 藍新金流 HashKey
 HASH_IV= # 藍新金流 HashIV
@@ -94,6 +91,7 @@ RETURN_URL= # 藍新金流 前端成功 Return URL
 ```
 
 ## 資料夾說明
+
 - connections - 資料庫連接
 - controllers - 控制器放置處
 - interface - TypeScript 型別
@@ -102,7 +100,7 @@ RETURN_URL= # 藍新金流 前端成功 Return URL
 - routes - API 路由
 - service - API 相關服務
 - utils - 通用方法
-...
+  ...
 
 ## 專案技術
 
@@ -111,12 +109,12 @@ RETURN_URL= # 藍新金流 前端成功 Return URL
 - mongoose v8.3.2
 - typescript v5.4.5
 - swagger v2.23.7
-...
+  ...
 
 ## 第三方服務
 
 - 藍新金流
-...
+  ...
 
 ## CI/CD 說明
 
@@ -127,7 +125,7 @@ RETURN_URL= # 藍新金流 前端成功 Return URL
 - 編譯程式碼
 - 執行 ESLint 掃描
 - 執行測試
-...
+  ...
 
 當專案 merge 到 main 時會自動執行以下動作：
 
@@ -137,13 +135,13 @@ RETURN_URL= # 藍新金流 前端成功 Return URL
 - 執行 ESLint 掃描
 - 執行測試
 - 部署到 Render
-...
+  ...
 
 ## 開發人員
 
 > 查看 GitHab 更多開發專案
 
 - [圈圈](https://github.com/panduola666)
-- [羽]()
-- [Hank]()
-...
+- [羽](https://github.com/linglingsyu)
+- [Hank](https://github.com/tw1720)
+  ...
