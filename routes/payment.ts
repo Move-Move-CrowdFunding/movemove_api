@@ -91,8 +91,19 @@ router.post(
 router.post(
   '/notify',
   catchAll(async (req: Request, res: Response) => {
+    // 成功格式
+    // const data = {
+    //   Status: 'SUCCESS',
+    //   MerchantID: 'MS152443410',
+    //   Version: '2.0',
+    //   TradeInfo:
+    //     '8afa618a41c07f9cad54416364b3517e2c20914b589c2c386d81239ef0a9b5e8a7f4e9cf2ca7fa1849fa48b671bed2abac06df6c047f941fec832971efb4431754263002d9b8ce0edd44b8a4e22212be24e755b1f2e5bac7c5b252b0c6f853ab65ad6192fa0970ebbe37f8af53bfd3f32f178a4893bdf17833c77881a04dac9b57607eb3d6371116f8b737a0776df8b37e51275084c11a444272296193aa926b913432a63639d999ca2097a5ebfe8dde44d65e92824430d2a97daa892f09c3bf7589aa4c5fa4ac9c8ee2d0fd292a77eb0e707647b170b563276f824dc355733d7ddcc7acd003ac521cdc29d54ebcb4be165df650306f70af611a33d8c7fce2c6e22690dbcb4c69e4fd52d12ddbf4d6bc9e9bd86d48c54be61cbdd2901cbf83bb59102be65c1ee281a6a2503c22f112e4b98d69d984c9545bc5f531c8190421d6a7bdab325aa8ac381b01038221c0e26ee583ca434627aab72a94335f626789e3',
+    //   TradeSha: '1187AA4C7833D91EC332FBD2C2F30623A5FF7EDE21EEF2EFC219E3040C680A36'
+    // }
     const info = parseAes(req.body.TradeInfo)
-    const orderDate = order[info.MerchantOrderNo]
+    console.log('info', info)
+
+    const orderDate = order[info.Result.MerchantOrderNo]
 
     await Sponsor.create({
       userId: orderDate.userId,
@@ -106,7 +117,12 @@ router.post(
       isNeedFeedback: orderDate.isNeedFeedback
     })
 
-    res.end()
+    responseSuccess.success({
+      res,
+      body: {
+        message: info.Message
+      }
+    })
   })
 )
 
@@ -159,10 +175,7 @@ function parseAes(TradeInfo: any) {
   const text = decrypt.update(TradeInfo, 'hex', 'utf8')
   const plainText = text + decrypt.final('utf8')
   const result = plainText.replace(/[\x00-\x20]+/g, '')
-  if (typeof result === 'string') {
-    return querystring.parse(result)
-  } else {
-    return JSON.parse(result)
-  }
+
+  return JSON.parse(result)
 }
 export default router
