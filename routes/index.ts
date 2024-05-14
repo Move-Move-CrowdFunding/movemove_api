@@ -20,6 +20,7 @@ interface IndexHome extends projectType {
 const router = express.Router()
 
 /* GET home page. */
+// TODO: 之後還要補上是否已經審核通過的條件
 router.get('/info', parseToken, async function (req, res) {
   /**
      * #swagger.tags = ['Home']

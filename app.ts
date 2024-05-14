@@ -6,6 +6,7 @@ import connectDB from './connections/'
 import type errorTask from './interface/errorTask'
 import responseError from './service/responseError'
 import cors from 'cors'
+import session from 'express-session'
 
 import homeRouter from './routes/index'
 import userRouter from './routes/users'
@@ -14,6 +15,7 @@ import uploadRouter from './routes/upload'
 import adminRouter from './routes/admin'
 import memberRouter from './routes/member'
 import paymentRouter from './routes/payment'
+// import gmailAuthRouter from './routes/gmailAuth'
 
 // Swagger 使用
 import swaggerUi from 'swagger-ui-express'
@@ -41,6 +43,14 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(cors())
+app.use(
+  session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+  })
+)
 
 // app.use(loggingMiddleware)
 
@@ -51,6 +61,7 @@ app.use('/upload', uploadRouter)
 app.use('/admin', adminRouter)
 app.use('/member', memberRouter)
 app.use('/payment', paymentRouter)
+// app.use('/gAuth', gmailAuthRouter)
 
 // 404 路由
 app.use((req: Request, res: Response) => {
