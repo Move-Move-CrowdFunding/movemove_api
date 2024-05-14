@@ -95,15 +95,22 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
 
     if (errorMsg.length === 0) {
       // 搜尋提案編號或標題關鍵字
-      const filter = { title: { $regex: search } }
+      let totalProjects = 0
+      let filter = {}
+      filter = { title: { $regex: search } }
+      totalProjects = await ProjectModel.countDocuments(filter)
+      if (!totalProjects) {
+        filter = { _id: search }
+        totalProjects = await ProjectModel.countDocuments(filter)
+      }
 
       // 分頁參數
-      const totalProjects = await ProjectModel.countDocuments(filter)
       const totalPage = Math.ceil(totalProjects / Number(pageSize))
       const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
 
       // 條件式查詢
       const projectsData = await ProjectModel.find(filter)
+        .populate('userId', 'nickName')
         .skip((Number(safePageNo) - 1) * Number(pageSize))
         .limit(Number(pageSize || 10))
         .sort({ startDate: sort })
@@ -130,7 +137,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       status: 'error',
-      message: '伺服器錯誤'
+      message: '伺服器錯誤' + error
     })
   }
 })
@@ -158,14 +165,15 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
 
   try {
     const projectId = req.params.projectId || 'empty'
-    console.log(projectId)
-    await ProjectModel.find({ _id: projectId }).then((projectData) => {
-      return res.status(200).json({
-        status: 'success',
-        message: '取得提案資料成功',
-        results: projectData
+    await ProjectModel.find({ _id: projectId })
+      .populate('userId', 'nickName')
+      .then((projectData) => {
+        return res.status(200).json({
+          status: 'success',
+          message: '取得提案資料成功',
+          results: projectData
+        })
       })
-    })
   } catch (error) {
     return res.status(404).json({
       status: 'error',
