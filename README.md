@@ -87,6 +87,11 @@ MERCHANT_ID= # 藍新金流 商店代號
 VERSION= # 藍新金流 串接版本號, 當前使用 '2.0'
 NOTIFY_URL={API_URL}/payment/notify # 藍新金流 後端成功 Notify URL
 RETURN_URL= # 藍新金流 前端成功 Return URL
+
+CLIENT_ID= # Google Cloud Platform Client ID
+CLIENT_SECRET= # Google Cloud Platform Secret Key
+GMAIL_REDIRECT_URL= # Google Cloud Platform redirect URI
+GMAIL_REFRESH_TOKEN= # Gmail API refresh token
 ...
 ```
 

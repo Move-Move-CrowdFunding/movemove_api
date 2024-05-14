@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import UserModal from '../models/User'
 import authMiddleware from '../middleware/authMiddleware'
 import { getJWTtoken, verifyJWTtoken } from '../utils/jwt'
+import { sendMail } from '../service/sendMail'
 
 const router = express.Router()
 
@@ -284,6 +285,75 @@ router.post('/check-login', async function (req, res) {
   }
 })
 
+router.post('/forget-password', async function (req, res) {
+  /**
+     * #swagger.tags = ['User']
+     * #swagger.description = '忘記密碼'
+     * #swagger.security = [{
+        token: []
+       }]
+     * #swagger.parameters['body'] = {
+        in: 'body',
+        description: '忘記密碼',
+        type: 'object',
+        required: true,
+        schema: {
+          $email: 'elsa@gmail.com',
+        }
+       }
+     * #swagger.responses[200] = {
+        description: '成功',
+        schema: {
+          "status": "success",
+          "message": "新密碼已寄出，請查看您的信箱",
+        },
+       }
+     * #swagger.responses[400] = {
+        description: '重設密碼失敗',
+        schema: {
+          "status": "error",
+          "message": "請輸入Email | 無此會員"
+        },
+       }
+     *
+     */
+  const { email } = req.body
+  if (!email) return res.status(400).json({ status: 'error', message: '請輸入Email' })
+
+  try {
+    const userData = await UserModal.findOne({ email })
+    if (userData) {
+      const newPassword = generatePassword(10)
+      const hashedPassword = await bcrypt.hash(newPassword, 10)
+      const updated = await UserModal.findOneAndUpdate({ _id: userData._id }, { password: hashedPassword })
+
+      if (updated) {
+        const MailInfo = await sendMail({
+          to: email,
+          subject: '募募 MoveMove - 重設密碼',
+          text: `親愛的用戶您好，您的新密碼是${newPassword}`
+        })
+        console.log(MailInfo)
+        res.status(200).json({
+          status: 'success',
+          message: '新密碼已寄出，請查看您的信箱'
+        })
+      }
+    } else {
+      res.status(400).json({
+        status: 'error',
+        message: '無此會員'
+      })
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({
+      status: 'error',
+      message: '伺服器錯誤'
+    })
+  }
+})
+
 // 取得會員資料
 router.get('/', authMiddleware, async function (req, res) {
   /**
@@ -448,5 +518,14 @@ router.patch('/', authMiddleware, async function (req, res) {
     })
   }
 })
+
+function generatePassword(length: number) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length))
+  }
+  return result
+}
 
 export default router
