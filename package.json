@@ -27,7 +27,7 @@
     "eslint-config-standard": "^17.1.0",
     "express": "~4.16.1",
     "express-session": "^1.18.0",
-    "googleapis": "^137.1.0",
+    "google-auth-library": "^9.10.0",
     "imgur": "^2.4.2",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
