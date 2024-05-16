@@ -2,10 +2,12 @@ import express from 'express'
 import authMiddleware from '../middleware/authMiddleware'
 import checkAdminAuth from '../middleware/checkAdminAuth'
 import ProjectModel from '../models/Project'
+import { Types } from 'mongoose'
+import createCheck from '../utils/createCheck'
 
 const router = express.Router()
 
-// 管理端 檔案列表-查詢 API /admin/projects TODO: 分頁功能 搜尋功能 完整的提案資料
+// 管理端 檔案列表-查詢 GET /admin/projects TODO: 提案狀態搜尋
 router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
@@ -94,26 +96,47 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     }
 
     if (errorMsg.length === 0) {
-      // 搜尋提案編號或標題關鍵字
-      let totalProjects = 0
+      // 搜尋與分頁參數
       let filter = {}
+      let totalProjects = 0
       filter = { title: { $regex: search } }
-      totalProjects = await ProjectModel.countDocuments(filter)
-      if (!totalProjects) {
-        filter = { _id: search }
-        totalProjects = await ProjectModel.countDocuments(filter)
+      if (Types.ObjectId.isValid(String(search))) {
+        filter = { _id: new Types.ObjectId(String(search)) }
       }
-
-      // 分頁參數
+      totalProjects = await ProjectModel.countDocuments(filter)
       const totalPage = Math.ceil(totalProjects / Number(pageSize))
       const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
 
       // 條件式查詢
-      const projectsData = await ProjectModel.find(filter)
-        .populate('userId', 'nickName')
-        .skip((Number(safePageNo) - 1) * Number(pageSize))
-        .limit(Number(pageSize || 10))
-        .sort({ startDate: sort })
+      const projectsData = await ProjectModel.aggregate([
+        { $match: filter },
+        {
+          $lookup: {
+            from: 'users',
+            let: { userIdStr: '$userId' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: { $eq: ['$_id', '$$userIdStr'] }
+                }
+              },
+              { $project: { password: 0 } }
+            ],
+            as: 'userId'
+          }
+        },
+        {
+          $lookup: {
+            from: 'checks',
+            localField: '_id',
+            foreignField: 'projectId',
+            as: 'checkList'
+          }
+        },
+        { $sort: { startDate: sort } },
+        { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
+        { $limit: Number(pageSize || 10) }
+      ])
 
       return res.status(200).json({
         status: 'success',
@@ -142,7 +165,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   }
 })
 
-// 管理端 取得提案內容 API /admin/projects/{project} TODO: 取得完整提案內容功能
+// 管理端 取得提案內容 GET /admin/projects/{projectId}
 router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, res) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
@@ -165,15 +188,114 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
 
   try {
     const projectId = req.params.projectId || 'empty'
-    await ProjectModel.find({ _id: projectId })
-      .populate('userId', 'nickName')
-      .then((projectData) => {
-        return res.status(200).json({
-          status: 'success',
-          message: '取得提案資料成功',
-          results: projectData
-        })
+    const projectData = await ProjectModel.aggregate([
+      {
+        $match: { _id: new Types.ObjectId(projectId) }
+      },
+      {
+        $lookup: {
+          from: 'users',
+          let: { userIdStr: '$userId' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$_id', '$$userIdStr'] }
+              }
+            },
+            { $project: { password: 0 } }
+          ],
+          as: 'userId'
+        }
+      },
+      {
+        $lookup: {
+          from: 'checks',
+          localField: '_id',
+          foreignField: 'projectId',
+          as: 'checkList'
+        }
+      }
+    ])
+
+    return res.status(200).json({
+      status: 'success',
+      message: '取得提案資料成功',
+      results: projectData
+    })
+  } catch (error) {
+    return res.status(404).json({
+      status: 'error',
+      message: '找不到此提案'
+    })
+  }
+})
+
+// 管理端 審核提案內容 POST /admin/projects/{projectId}
+router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, res, next) => {
+  /**
+   * #swagger.tags = ['Admin - 管理端']
+   * #swagger.description = '審核提案內容'
+   * #swagger.security = [{
+      token: []
+    }]
+  * #swagger.parameters['body'] = {
+    in: 'body',
+    description: 'approve: 1 = 核准, -1= 否准 , content: 審核說明(否准時為必填)',
+    type: 'object',
+    required: true,
+    schema: {
+      "approve": 1,
+      "content": "管理員已核准提案"
+    }
+  }
+  * #swagger.responses[200] = {
+    description: '審核提案資料成功',
+    schema: {
+      "status": "success",
+      "message": "審核提案資料成功"
+    }
+  }
+  *
+  */
+
+  try {
+    const errorMsg = []
+    const { approve, content } = req.body
+    const projectId = req.params.projectId || 'empty'
+
+    // 提案編號格式檢查
+    if (!Types.ObjectId.isValid(String(projectId))) {
+      errorMsg.push('編號格式錯誤')
+    }
+
+    // 審核狀態 1 = 核准, -1= 否准
+    if (![1, -1].includes(Number(approve))) {
+      errorMsg.push('審核狀態錯誤')
+    }
+
+    // 審核說明 在approve = -1時為必填
+    if (approve === -1 && !content) {
+      errorMsg.push('審核說明錯誤')
+    }
+
+    if (errorMsg.length === 0) {
+      await createCheck({
+        projectId: projectId as any,
+        content,
+        status: approve,
+        next
       })
+
+      return res.status(200).json({
+        status: 'success',
+        message: '審核提案資料成功'
+      })
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: `發生錯誤 ${errorMsg.join()}`
+      })
+    }
   } catch (error) {
     return res.status(404).json({
       status: 'error',
