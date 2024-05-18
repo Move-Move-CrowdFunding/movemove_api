@@ -127,7 +127,6 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
             as: 'userId'
           }
         },
-        { $unwind: '$userId' },
         {
           $lookup: {
             from: 'checks',
@@ -212,7 +211,6 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
           as: 'userId'
         }
       },
-      { $unwind: '$userId' },
       {
         $lookup: {
           from: 'checks',
