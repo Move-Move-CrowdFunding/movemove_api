@@ -7,7 +7,7 @@ import createCheck from '../utils/createCheck'
 
 const router = express.Router()
 
-// 管理端 檔案列表-查詢 GET /admin/projects TODO: 提案狀態搜尋
+// 管理端 檔案列表-查詢 GET /admin/projects TODO: 提案狀態搜尋, 加入提案狀態欄位註記
 router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
@@ -113,18 +113,21 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
         {
           $lookup: {
             from: 'users',
-            let: { userIdStr: '$userId' },
+            let: { userId: '$userId' },
             pipeline: [
               {
                 $match: {
-                  $expr: { $eq: ['$_id', '$$userIdStr'] }
+                  $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
                 }
               },
-              { $project: { password: 0 } }
+              {
+                $project: { password: 0 }
+              }
             ],
             as: 'userId'
           }
         },
+        { $unwind: '$userId' },
         {
           $lookup: {
             from: 'checks',
@@ -135,7 +138,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
         },
         { $sort: { startDate: sort } },
         { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
-        { $limit: Number(pageSize || 10) }
+        { $limit: Number(pageSize) }
       ])
 
       return res.status(200).json({
@@ -160,7 +163,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       status: 'error',
-      message: '伺服器錯誤' + error
+      message: '伺服器錯誤'
     })
   }
 })
@@ -195,18 +198,21 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
       {
         $lookup: {
           from: 'users',
-          let: { userIdStr: '$userId' },
+          let: { userId: '$userId' },
           pipeline: [
             {
               $match: {
-                $expr: { $eq: ['$_id', '$$userIdStr'] }
+                $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
               }
             },
-            { $project: { password: 0 } }
+            {
+              $project: { password: 0 }
+            }
           ],
           as: 'userId'
         }
       },
+      { $unwind: '$userId' },
       {
         $lookup: {
           from: 'checks',
@@ -263,19 +269,27 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
     const { approve, content } = req.body
     const projectId = req.params.projectId || 'empty'
 
-    // 提案編號格式檢查
-    if (!Types.ObjectId.isValid(String(projectId))) {
-      errorMsg.push('編號格式錯誤')
+    // 檢查提案編號
+    if (Types.ObjectId.isValid(String(projectId))) {
+      const findProjectId = await ProjectModel.findById(projectId)
+      if (!findProjectId) {
+        return res.status(404).json({
+          status: 'error',
+          message: '找不到提案'
+        })
+      }
+    } else {
+      errorMsg.push('請檢查編號格式')
     }
 
     // 審核狀態 1 = 核准, -1= 否准
     if (![1, -1].includes(Number(approve))) {
-      errorMsg.push('審核狀態錯誤')
+      errorMsg.push('請檢查審核狀態')
     }
 
     // 審核說明 在approve = -1時為必填
     if (approve === -1 && !content) {
-      errorMsg.push('審核說明錯誤')
+      errorMsg.push('需要審核說明')
     }
 
     if (errorMsg.length === 0) {
@@ -297,9 +311,9 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
       })
     }
   } catch (error) {
-    return res.status(404).json({
+    return res.status(500).json({
       status: 'error',
-      message: '找不到此提案'
+      message: '伺服器錯誤'
     })
   }
 })
