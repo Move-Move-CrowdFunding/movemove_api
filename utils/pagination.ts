@@ -20,7 +20,7 @@ interface Pagination {
 const pagination = async ({ database, option, req, next }: Pagination) => {
   const pageNo = Number(req.query.pageNo) || 1
   const pageSize = Number(req.query.pageSize) || 10
-  const { filter, populate } = option
+  const { populate } = option
 
   const optionArr: any[] = []
   const addOptionArr = (object: any, objectName: string) => {
@@ -31,7 +31,8 @@ const pagination = async ({ database, option, req, next }: Pagination) => {
         ['select', '$project'],
         ['lookup', '$lookup'],
         ['lookup1', '$lookup'],
-        ['lookup2', '$lookup']
+        ['lookup2', '$lookup'],
+        ['match', '$match']
       ])
       if (keyMap.has(objectName)) {
         optionArr.push({
@@ -44,6 +45,7 @@ const pagination = async ({ database, option, req, next }: Pagination) => {
   Object.keys(option).forEach((keyStr) => addOptionArr(option[keyStr], String(keyStr)))
 
   // 向下查找
+
   const curPage = await database
     .aggregate([
       ...optionArr,
@@ -61,7 +63,9 @@ const pagination = async ({ database, option, req, next }: Pagination) => {
     await database.populate(curPage, populate)
   }
 
-  const count = await database.find(filter).count()
+  const totalData = await database.aggregate([...optionArr])
+
+  const count = totalData.length
   const totalPage = Math.ceil(count / pageSize)
 
   const data = {

@@ -1,5 +1,8 @@
+import { Types } from 'mongoose'
+
 interface projectType {
-  userId?: string
+  _id: Types.ObjectId
+  userId?: Types.ObjectId
   introduce: string
   teamName: string
   email: string

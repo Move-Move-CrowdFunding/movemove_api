@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express'
 import type { paginationOption, paginationReq, paginationData } from '../interface/pagination'
 import tokenInfo from '../interface/tokenInfo'
+import projectType from '../interface/project'
 import { Types } from 'mongoose'
 
 import catchAll from '../service/catchAll'
@@ -163,17 +164,22 @@ router.get(
         from: 'checks',
         localField: '_id',
         foreignField: 'projectId',
-        as: 'checkList'
+        as: 'checkList',
+        pipeline: [{ $match: { status: 1 } }]
+      },
+      match: {
+        'checkList.0': { $exists: true }
       }
       // populate: {
       //   path: 'userId'
       // }
     }
     if (!JSON.parse(isExpired as string)) {
+      // 篩掉過期的提案
       if (option.filter) {
-        option.filter.endDate = { $gt: Date.now() / 1000 }
+        option.filter.endDate = { $gt: Math.ceil(Date.now() / 1000) }
       } else {
-        option.filter = { endDate: { $gt: Date.now() / 1000 } }
+        option.filter = { endDate: { $gt: Math.ceil(Date.now() / 1000) } }
       }
     }
     if (Number(categoryKey)) {
@@ -197,69 +203,18 @@ router.get(
         })
       )
     }
-    const results = pageData.results
-      .filter((item) => item.checkList.length && item.checkList.some((check: any) => check.status === 1))
-      .map((item) => {
-        const {
-          _id,
-          introduce,
-          teamName,
-          title,
-          email,
-          categoryKey,
-          phone,
-          targetMoney,
-          content,
-          coverUrl,
-          describe,
-          videoUrl,
-          startDate,
-          endDate,
-          relatedUrl,
-          feedbackItem,
-          feedbackUrl,
-          feedbackMoney,
-          feedbackDate,
-          trackList = [],
-          sponsorList = []
-        } = item
-
-        return {
-          id: _id,
-          introduce,
-          teamName,
-          title,
-          email,
-          categoryKey,
-          phone,
-          achievedMoney: sponsorList.reduce((num: number, obj: any) => num + Number(obj.money), 0),
-          targetMoney,
-          content,
-          coverUrl,
-          describe,
-          videoUrl,
-          startDate,
-          endDate,
-          relatedUrl,
-          feedbackItem,
-          feedbackUrl,
-          feedbackMoney,
-          feedbackDate,
-          trackingStatus:
-            req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
-        }
-      })
-
-    const count = await (Check as any).find({ status: 1 }).count()
 
     responseSuccess.success({
       res,
       body: {
         message: '取得募資列表成功',
-        results,
+        ...pageData,
         pagination: {
-          ...pageData.pagination,
-          count
+          ...pageData.pagination
+          // count: checkSet.length,
+          // hasPre: Number(pageNo) > 1,
+          // hasNext: Number(pageNo) < totalPage,
+          // totalPage
         }
       }
     })
@@ -624,6 +579,223 @@ router.post(
       res,
       body: {
         message: '資料新增成功'
+      }
+    })
+  })
+)
+
+// 修改提案
+router.patch(
+  '/:id',
+  authMiddleware,
+  catchAll(async (req: Request, res: Response, next: NextFunction) => {
+    /**
+     * #swagger.tags = ['Projects - 提案']
+     * #swagger.description = '修改提案'
+     * #swagger.security = [{
+        token: []
+       }]
+     * #swagger.parameters['body'] = {
+        in: 'body',
+        description: '修改提案格式',
+        type: 'object',
+        required: true,
+        schema: {
+          $userId: '66378c5f9fb5b5e7c300e95c',
+          introduce: '團隊介紹',
+          $teamName: '提案人姓名/團隊名稱',
+          $title: '提案標題',
+          $email: '聯絡信箱',
+          $categoryKey: 1,
+          $phone: '連絡電話',
+          $targetMoney: 50000,
+          $content: '<p>提案內容</p>',
+          $coverUrl: 'https://fakeimg.pl/300/',
+          $describe: '提案簡介',
+          videoUrl: 'https://youtube.com/',
+          $startDate: 1678982400,
+          $endDate: 1679846400,
+          relatedUrl: 'https://www.google.com/',
+          feedbackItem: '限量精美小熊維尼',
+          feedbackUrl: 'https://fakeimg.pl/300/',
+          feedbackMoney: 100,
+          feedbackDate: 1682524800,
+          earlyEnd: false
+        }
+       }
+     * #swagger.responses[200] = {
+        description: '修改提案成功',
+        schema: {
+          "status": "success",
+          "message": "修改提案成功"
+        },
+       }
+     * #swagger.responses[400] = {
+        description: '修改提案失敗',
+        schema: {
+          "status": "error",
+          "message": "請輸入提案標題"
+        },
+       }
+     *
+     */
+    const projectId = req.params.id
+
+    const projectData: projectType | null = await Project.findById(projectId)
+
+    if (!projectData) {
+      return next(
+        globalError({
+          httpStatus: 404,
+          errMessage: '查無此提案'
+        })
+      )
+    }
+    if (projectData.userId && !projectData.userId.equals(new Types.ObjectId((req as tokenInfo).user.id))) {
+      return next(
+        globalError({
+          httpStatus: 403,
+          errMessage: '身分驗證錯誤,請重新登入'
+        })
+      )
+    }
+
+    if (projectData && projectData.endDate < Math.ceil(Date.now() / 1000)) {
+      return next(
+        globalError({
+          errMessage: '該提案已結束'
+        })
+      )
+    }
+
+    const {
+      introduce = '',
+      teamName = '',
+      title = '',
+      email = '',
+      categoryKey = 0,
+      phone = '',
+      targetMoney = 0,
+      content = '',
+      coverUrl = '',
+      describe = '',
+      videoUrl = '',
+      startDate,
+      endDate,
+      relatedUrl = '',
+      feedbackItem = '',
+      feedbackUrl = '',
+      feedbackMoney = 0,
+      feedbackDate,
+      earlyEnd = false // 是否提早結束
+    } = req.body
+
+    const requiredError: string[] = requiredRules({
+      req,
+      params: [
+        'teamName',
+        'email',
+        'phone',
+        'title',
+        'categoryKey',
+        'targetMoney',
+        'startDate',
+        'endDate',
+        'describe',
+        'coverUrl',
+        'content'
+      ],
+      messageArea: 'project'
+    })
+    if (requiredError.length) {
+      return next(
+        globalError({
+          errMessage: requiredError[0]
+        })
+      )
+    }
+    // 提案類型錯誤
+    if (![1, 2, 3, 4, 5, 6].includes(categoryKey)) {
+      return next(
+        globalError({
+          errMessage: '提案類型錯誤'
+        })
+      )
+    }
+    // 日期驗證
+    const startTimer = String(startDate).padEnd(13, '0')
+    const endTimer = String(endDate).padEnd(13, '0')
+    const feedbackTimer = String(feedbackDate).padEnd(13, '0')
+
+    if (moment(Number(endTimer)).isBefore(moment(Number(startTimer)))) {
+      return next(
+        globalError({
+          errMessage: '結束時間不可小於開始時間'
+        })
+      )
+    }
+
+    if (
+      moment(Number(startTimer)).isBefore(moment(), 'days') ||
+      moment(Number(endTimer)).isBefore(moment(), 'days') ||
+      moment(Number(feedbackTimer)).isBefore(moment(), 'days')
+    ) {
+      return next(
+        globalError({
+          errMessage: '日期不可小於今日'
+        })
+      )
+    }
+    if (moment(Number(startTimer)).diff(moment(), 'days') < 10) {
+      return next(
+        globalError({
+          errMessage: '開始日期不能是 10 日內'
+        })
+      )
+    }
+
+    await Project.findByIdAndUpdate(projectId, {
+      userId: (req as tokenInfo).user.id,
+      introduce,
+      teamName,
+      title,
+      email,
+      categoryKey,
+      phone,
+      targetMoney,
+      content,
+      coverUrl,
+      describe,
+      videoUrl,
+      startDate: Number(startTimer.substring(0, 10)),
+      endDate: earlyEnd ? Math.ceil(Date.now() / 1000) : Number(endTimer.substring(0, 10)),
+      relatedUrl,
+      feedbackItem,
+      feedbackUrl,
+      feedbackMoney,
+      feedbackDate
+    })
+
+    const checkData = await createCheck({
+      projectId: projectData._id,
+      content: '',
+      status: 0,
+      next
+    })
+
+    if (!checkData) {
+      return next(
+        globalError({
+          httpStatus: 400,
+          errMessage: '修改提案失敗'
+        })
+      )
+    }
+
+    responseSuccess.success({
+      res,
+      body: {
+        message: '修改提案成功'
       }
     })
   })
