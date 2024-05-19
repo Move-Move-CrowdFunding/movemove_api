@@ -7,7 +7,7 @@ import createCheck from '../utils/createCheck'
 
 const router = express.Router()
 
-// 管理端 檔案列表-查詢 GET /admin/projects TODO: 提案狀態搜尋, 加入提案狀態欄位註記
+// 管理端 檔案列表-查詢 GET /admin/projects
 router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
@@ -99,15 +99,65 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
       // 搜尋與分頁參數
       let filter = {}
       let totalProjects = 0
+
+      // 提案狀態查詢邏輯
+      let statusFilter = {}
+      switch (Number(status)) {
+        case 0:
+          statusFilter = { 'checkList.status': 0 }
+          break
+        case 1:
+          statusFilter = { 'checkList.status': 1 }
+          break
+        case -1:
+          statusFilter = { 'checkList.status': -1 }
+          break
+        case 2:
+          statusFilter = { endDate: { $lt: Date.now() / 1000 } }
+          break
+      }
+
       filter = { title: { $regex: search } }
       if (Types.ObjectId.isValid(String(search))) {
         filter = { _id: new Types.ObjectId(String(search)) }
       }
-      totalProjects = await ProjectModel.countDocuments(filter)
+
+      // 取得符合條件的總筆數
+      await ProjectModel.aggregate([
+        { $match: filter },
+        {
+          $lookup: {
+            from: 'checks',
+            let: { projectId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$projectId', '$$projectId']
+                  }
+                }
+              },
+              { $sort: { updateTime: -1 } },
+              { $limit: 1 }
+            ],
+            as: 'checkList'
+          }
+        },
+        { $unwind: '$checkList' },
+        { $match: statusFilter },
+        {
+          $addFields: {
+            status: '$checkList.status'
+          }
+        }
+      ]).then((results) => {
+        totalProjects = results.length
+      })
+
       const totalPage = Math.ceil(totalProjects / Number(pageSize))
       const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
 
-      // 條件式查詢
+      // 綜合條件後查詢
       const projectsData = await ProjectModel.aggregate([
         { $match: filter },
         {
@@ -120,21 +170,38 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
                   $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
                 }
               },
-              {
-                $project: { password: 0 }
-              }
+              { $project: { password: 0 } }
             ],
             as: 'userId'
           }
         },
+        { $unwind: '$userId' },
         {
           $lookup: {
             from: 'checks',
-            localField: '_id',
-            foreignField: 'projectId',
+            let: { projectId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$projectId', '$$projectId']
+                  }
+                }
+              },
+              { $sort: { updateTime: -1 } },
+              { $limit: 1 } // 只查最新的審核紀錄
+            ],
             as: 'checkList'
           }
         },
+        { $unwind: '$checkList' },
+        { $match: statusFilter },
+        {
+          $addFields: {
+            status: '$checkList.status'
+          }
+        },
+        { $unwind: '$status' },
         { $sort: { startDate: sort } },
         { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
         { $limit: Number(pageSize) }
@@ -142,7 +209,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
 
       return res.status(200).json({
         status: 'success',
-        message: '提案列表取得成功',
+        message: totalProjects ? '提案列表取得成功' : '找不到相符條件的資料',
         results: projectsData,
         pagination: {
           pageNo: Number(safePageNo),
@@ -204,18 +271,26 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
                 $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
               }
             },
-            {
-              $project: { password: 0 }
-            }
+            { $project: { password: 0 } }
           ],
           as: 'userId'
         }
       },
+      { $unwind: '$userId' },
       {
         $lookup: {
           from: 'checks',
-          localField: '_id',
-          foreignField: 'projectId',
+          let: { projectId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$projectId', '$$projectId']
+                }
+              }
+            },
+            { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
+          ],
           as: 'checkList'
         }
       }
@@ -234,7 +309,7 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
   }
 })
 
-// 管理端 審核提案內容 POST /admin/projects/{projectId}
+// 管理端 審核提案內容 POST /admin/projects/{projectId} TODO: 發送通知
 router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, res, next) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
