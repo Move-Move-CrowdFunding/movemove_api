@@ -11,7 +11,6 @@ import moment from 'moment'
 
 interface IndexHome extends projectType {
   // existing properties...
-  _id: string
   achievedMoney: number
   percentage: number
   trackingStatus?: boolean
