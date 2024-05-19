@@ -404,7 +404,6 @@ router.post(
         type: 'object',
         required: true,
         schema: {
-          $userId: '66378c5f9fb5b5e7c300e95c',
           introduce: '團隊介紹',
           $teamName: '提案人姓名/團隊名稱',
           $title: '提案標題',
@@ -601,7 +600,6 @@ router.patch(
         type: 'object',
         required: true,
         schema: {
-          $userId: '66378c5f9fb5b5e7c300e95c',
           introduce: '團隊介紹',
           $teamName: '提案人姓名/團隊名稱',
           $title: '提案標題',
