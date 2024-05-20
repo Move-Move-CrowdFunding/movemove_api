@@ -1,5 +1,6 @@
 import express, { Response, NextFunction } from 'express'
 import { Types } from 'mongoose'
+import bcrypt from 'bcrypt'
 
 import type { paginationReq } from '../interface/pagination'
 import catchAll from '../service/catchAll'
@@ -9,6 +10,7 @@ import responseSuccess from '../service/responseSuccess'
 import authMiddleware from '../middleware/authMiddleware'
 
 import Project from '../models/Project'
+import UserModal from '../models/User'
 
 const router = express.Router()
 
@@ -186,5 +188,82 @@ router.get(
     )
   })
 )
+
+// 用戶端 修改密碼 PATCH /member/password
+router.patch('/password', authMiddleware, async (req, res) => {
+  /**
+   * #swagger.tags = ['Member - 會員中心']
+   * #swagger.description = '密碼修改'
+   * #swagger.security = [{
+      token: []
+    }]
+  * #swagger.parameters['body'] = {
+    in: 'body',
+    description: '修改密碼，至少8碼',
+    type: 'object',
+    required: true,
+    schema: {
+      "oldPassword": "11111111",
+      "newPassword": "22222222"
+    }
+  }
+  * #swagger.responses[200] = {
+    description: '密碼修改成功',
+    schema: {
+      "status": "success",
+      "message": "密碼修改成功"
+    }
+  }
+  *
+  */
+
+  try {
+    const { id } = (req as any).user
+    const { oldPassword, newPassword } = req.body
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        status: 'error',
+        message: '新、舊密碼為必填'
+      })
+    }
+
+    if (oldPassword.length < 8 || newPassword.length < 8) {
+      return res.status(400).json({
+        status: 'error',
+        message: '密碼至少要8碼'
+      })
+    }
+
+    const userData = await UserModal.findOne({ _id: id })
+    if (userData) {
+      const isPasswordValid = await bcrypt.compare(`${oldPassword}`, userData.password)
+      if (isPasswordValid) {
+        const newPasswordHashed = await bcrypt.hash(newPassword, 10)
+        await UserModal.findByIdAndUpdate(id, { password: newPasswordHashed }).then(() => {
+          return res.status(200).json({
+            status: 'success',
+            message: '密碼修改成功'
+          })
+        })
+      } else {
+        return res.status(400).json({
+          status: 'error',
+          message: '舊密碼錯誤'
+        })
+      }
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: '不存在的用戶'
+      })
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: '伺服器錯誤' + error
+    })
+  }
+})
 
 export default router

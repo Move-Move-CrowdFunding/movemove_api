@@ -2,6 +2,7 @@ import express from 'express'
 import authMiddleware from '../middleware/authMiddleware'
 import checkAdminAuth from '../middleware/checkAdminAuth'
 import ProjectModel from '../models/Project'
+import CheckModel from '../models/Check'
 import { Types } from 'mongoose'
 import createCheck from '../utils/createCheck'
 
@@ -104,13 +105,13 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
       let statusFilter = {}
       switch (Number(status)) {
         case 0:
-          statusFilter = { 'checkList.status': 0 }
+          statusFilter = { 'reviewLog.status': 0 }
           break
         case 1:
-          statusFilter = { 'checkList.status': 1 }
+          statusFilter = { 'reviewLog.status': 1 }
           break
         case -1:
-          statusFilter = { 'checkList.status': -1 }
+          statusFilter = { 'reviewLog.status': -1 }
           break
         case 2:
           statusFilter = { endDate: { $lt: Date.now() / 1000 } }
@@ -140,14 +141,14 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
               { $sort: { updateTime: -1 } },
               { $limit: 1 }
             ],
-            as: 'checkList'
+            as: 'reviewLog'
           }
         },
-        { $unwind: '$checkList' },
+        { $unwind: '$reviewLog' },
         { $match: statusFilter },
         {
           $addFields: {
-            status: '$checkList.status'
+            status: '$reviewLog.status'
           }
         }
       ]).then((results) => {
@@ -169,13 +170,17 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
                 $match: {
                   $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
                 }
-              },
-              { $project: { password: 0 } }
+              }
             ],
             as: 'userId'
           }
         },
         { $unwind: '$userId' },
+        {
+          $addFields: {
+            nickName: '$userId.nickName'
+          }
+        },
         {
           $lookup: {
             from: 'checks',
@@ -191,17 +196,30 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
               { $sort: { updateTime: -1 } },
               { $limit: 1 } // 只查最新的審核紀錄
             ],
-            as: 'checkList'
+            as: 'reviewLog'
           }
         },
-        { $unwind: '$checkList' },
+        { $unwind: '$reviewLog' },
         { $match: statusFilter },
         {
           $addFields: {
-            status: '$checkList.status'
+            status: {
+              $switch: {
+                branches: [
+                  { case: { $lt: ['$endDate', Date.now() / 1000] }, then: 2 } // 代號2為已結束的提案
+                ],
+                default: '$reviewLog.status'
+              }
+            }
           }
         },
         { $unwind: '$status' },
+        {
+          $project: {
+            userId: 0,
+            reviewLog: 0
+          }
+        },
         { $sort: { startDate: sort } },
         { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
         { $limit: Number(pageSize) }
@@ -217,6 +235,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
           totalPage,
           count: totalProjects,
           sortDesc: String(sortDesc),
+          status,
           search: String(search)
         }
       })
@@ -291,7 +310,32 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
             },
             { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
           ],
-          as: 'checkList'
+          as: 'reviewLog'
+        }
+      },
+      {
+        $addFields: {
+          latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
+        }
+      },
+      {
+        $addFields: {
+          state: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$latestCheck.status', 1] }, then: { state: 1, content: '已核准' } },
+                { case: { $eq: ['$latestCheck.status', -1] }, then: { state: 1, content: '被否准' } },
+                { case: { $lt: ['$endDate', Date.now() / 1000] }, then: { state: 2, content: '已結束' } }
+              ],
+              default: { state: 0, content: '待審核' }
+            }
+          }
+        }
+      },
+      { $unwind: '$state' },
+      {
+        $project: {
+          latestCheck: 0
         }
       }
     ])
@@ -366,6 +410,15 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
     }
 
     if (errorMsg.length === 0) {
+      // 避免重複審核已有核准紀錄的提案
+      const findProjectIsChecked = await CheckModel.countDocuments({ projectId, status: 1 })
+      if (findProjectIsChecked > 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: '該筆提案已有核准紀錄'
+        })
+      }
+
       await createCheck({
         projectId: projectId as any,
         content,
