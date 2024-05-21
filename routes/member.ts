@@ -10,7 +10,8 @@ import responseSuccess from '../service/responseSuccess'
 import authMiddleware from '../middleware/authMiddleware'
 
 import Project from '../models/Project'
-import UserModal from '../models/User'
+import User from '../models/User'
+import Track from '../models/Track'
 
 const router = express.Router()
 
@@ -235,12 +236,12 @@ router.patch('/password', authMiddleware, async (req, res) => {
       })
     }
 
-    const userData = await UserModal.findOne({ _id: id })
+    const userData = await User.findOne({ _id: id })
     if (userData) {
       const isPasswordValid = await bcrypt.compare(`${oldPassword}`, userData.password)
       if (isPasswordValid) {
         const newPasswordHashed = await bcrypt.hash(newPassword, 10)
-        await UserModal.findByIdAndUpdate(id, { password: newPasswordHashed }).then(() => {
+        await User.findByIdAndUpdate(id, { password: newPasswordHashed }).then(() => {
           return res.status(200).json({
             status: 'success',
             message: '密碼修改成功'
@@ -256,6 +257,77 @@ router.patch('/password', authMiddleware, async (req, res) => {
       return res.status(400).json({
         status: 'error',
         message: '不存在的用戶'
+      })
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: '伺服器錯誤' + error
+    })
+  }
+})
+
+// 用戶端 修改密碼 POST /member/collection
+router.post('/collection', authMiddleware, async (req, res) => {
+  /**
+   * #swagger.tags = ['Member - 會員中心']
+   * #swagger.description = '追蹤或取消追蹤提案'
+   * #swagger.security = [{
+      token: []
+    }]
+  * #swagger.parameters['body'] = {
+    in: 'body',
+    description: '要追蹤或取消追蹤的提案編號',
+    type: 'object',
+    required: true,
+    schema: {
+      "projectId": "66401d4618d9a03d581946fc"
+    }
+  }
+  * #swagger.responses[200] = {
+    description: '狀態更新成功',
+    schema: {
+      "status": "success",
+      "message": "狀態更新成功"
+    }
+  }
+  *
+  */
+
+  try {
+    const { id } = (req as any).user
+    const { projectId } = req.body
+
+    // 檢查提案編號
+    if (Types.ObjectId.isValid(String(projectId))) {
+      const projectData = await Project.findById(projectId)
+      if (!projectData) {
+        return res.status(404).json({
+          status: 'error',
+          message: '無此提案'
+        })
+      }
+
+      // 已追蹤的提案則刪除追蹤
+      const trackFilter = { userId: id, projectId }
+      const trackData = await Track.find(trackFilter)
+      let trackTodo = ''
+      if (trackData.length > 0) {
+        await Track.deleteMany(trackFilter)
+        trackTodo = '-已退追'
+      } else {
+        await Track.create(trackFilter)
+        trackTodo = '-已追蹤'
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: '狀態更新成功' + trackTodo
+      })
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: '請檢查提案編號'
       })
     }
   } catch (error) {
