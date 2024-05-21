@@ -280,22 +280,22 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
       {
         $match: { _id: new Types.ObjectId(projectId) }
       },
-      {
-        $lookup: {
-          from: 'users',
-          let: { userId: '$userId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
-              }
-            },
-            { $project: { password: 0 } }
-          ],
-          as: 'userId'
-        }
-      },
-      { $unwind: '$userId' },
+      // {
+      //   $lookup: {
+      //     from: 'users',
+      //     let: { userId: '$userId' },
+      //     pipeline: [
+      //       {
+      //         $match: {
+      //           $expr: { $eq: ['$_id', { $toObjectId: '$$userId' }] }
+      //         }
+      //       },
+      //       { $project: { password: 0 } }
+      //     ],
+      //     as: 'userId'
+      //   }
+      // },
+      // { $unwind: '$userId' },
       {
         $lookup: {
           from: 'checks',
@@ -315,6 +315,19 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
       },
       {
         $addFields: {
+          reviewLog: {
+            $map: {
+              input: '$reviewLog',
+              as: 'check',
+              in: {
+                $mergeObjects: ['$$check', { timestamp: '$$check.updateTime' }]
+              }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
           latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
         }
       },
@@ -322,12 +335,8 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
         $addFields: {
           state: {
             $switch: {
-              branches: [
-                { case: { $eq: ['$latestCheck.status', 1] }, then: { state: 1, content: '已核准' } },
-                { case: { $eq: ['$latestCheck.status', -1] }, then: { state: 1, content: '被否准' } },
-                { case: { $lt: ['$endDate', Date.now() / 1000] }, then: { state: 2, content: '已結束' } }
-              ],
-              default: { state: 0, content: '待審核' }
+              branches: [{ case: { $lt: ['$endDate', Date.now() / 1000] }, then: { state: 2, content: '已結束' } }],
+              default: { state: '$latestCheck.status', content: '$latestCheck.content' }
             }
           }
         }
@@ -335,7 +344,11 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
       { $unwind: '$state' },
       {
         $project: {
-          latestCheck: 0
+          userId: 0,
+          latestCheck: 0,
+          'reviewLog.projectId': 0,
+          'reviewLog.createTime': 0,
+          'reviewLog.updateTime': 0
         }
       }
     ])
