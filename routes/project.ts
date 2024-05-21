@@ -204,18 +204,38 @@ router.get(
       )
     }
 
+    const results = pageData.results.map((item: any) => ({
+      id: item._id,
+      introduce: item.introduce,
+      teamName: item.teamName,
+      title: item.title,
+      email: item.email,
+      categoryKey: item.categoryKey,
+      phone: item.phone,
+      achievedMoney: item.sponsorList.reduce((num: number, sponsor: any) => num + Number(sponsor.money), 0),
+      targetMoney: item.targetMoney,
+      content: item.content,
+      coverUrl: item.coverUrl,
+      describe: item.describe,
+      videoUrl: item.videoUrl,
+      startDate: item.startDate,
+      endDate: item.endDate,
+      relatedUrl: item.relatedUrl,
+      feedbackItem: item.feedbackItem,
+      feedbackUrl: item.feedbackUrl,
+      feedbackMoney: item.feedbackMoney,
+      feedbackDate: item.feedbackDate,
+      trackingStatus: req.isLogin
+        ? !!item.trackList.find((track: any) => String(track.userId) === req!.payload.id)
+        : false
+    }))
+
     responseSuccess.success({
       res,
       body: {
         message: '取得募資列表成功',
         ...pageData,
-        pagination: {
-          ...pageData.pagination
-          // count: checkSet.length,
-          // hasPre: Number(pageNo) > 1,
-          // hasNext: Number(pageNo) < totalPage,
-          // totalPage
-        }
+        results
       }
     })
   })
@@ -273,6 +293,7 @@ router.get(
         },
       }
      */
+
     const data = await Project.aggregate([
       {
         $match: {
@@ -300,90 +321,59 @@ router.get(
           from: 'checks',
           localField: '_id',
           foreignField: 'projectId',
-          as: 'checkList'
+          as: 'checkList',
+          pipeline: [{ $match: { status: 1 } }]
+        }
+      },
+      {
+        $match: {
+          'checkList.0': { $exists: true }
         }
       }
     ])
-
-    if (data.length) {
-      const {
-        _id,
-        userId,
-        categoryKey,
-        coverUrl,
-        describe,
-        endDate,
-        title,
-        videoUrl,
-        startDate,
-        feedbackItem,
-        feedbackUrl,
-        feedbackMoney,
-        feedbackDate,
-        targetMoney,
-        teamName,
-        phone,
-        email,
-        relatedUrl,
-        introduce,
-        content,
-        sponsorList,
-        trackList,
-        checkList
-      } = data[0]
-
-      if (!userId.equals(new Types.ObjectId(req.payload.id)) && !checkList.some((check: any) => check.status === 1)) {
-        // 不可查看未審核通過的提案
-        return next(
-          globalError({
-            httpStatus: 404,
-            errMessage: '查無此提案'
-          })
-        )
-      }
-
-      const results: any = {
-        id: _id,
-        userId,
-        categoryKey,
-        coverUrl,
-        describe,
-        endDate,
-        title,
-        videoUrl,
-        startDate,
-        feedbackItem,
-        feedbackUrl,
-        feedbackMoney,
-        feedbackDate,
-        targetMoney,
-        teamName,
-        phone,
-        email,
-        relatedUrl,
-        introduce,
-        content,
-        achievedMoney: sponsorList.reduce((num: number, sponsor: any) => num + Number(sponsor.money), 0),
-        supportCount: sponsorList.length,
-        trackingStatus:
-          req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id)))
-      }
-
-      responseSuccess.success({
-        res,
-        body: {
-          message: '資料取得成功',
-          results
-        }
-      })
-      return
+    if (!data.length) {
+      // 不可查看未審核通過的提案
+      return next(
+        globalError({
+          httpStatus: 404,
+          errMessage: '查無此提案'
+        })
+      )
     }
-    next(
-      globalError({
-        httpStatus: 404,
-        errMessage: '查無此提案'
-      })
-    )
+    const [passProject] = data
+    responseSuccess.success({
+      res,
+      body: {
+        message: '資料取得成功',
+        results: {
+          id: passProject._id,
+          userId: passProject.userId,
+          categoryKey: passProject.categoryKey,
+          coverUrl: passProject.coverUrl,
+          describe: passProject.describe,
+          endDate: passProject.endDate,
+          title: passProject.title,
+          videoUrl: passProject.videoUrl,
+          startDate: passProject.startDate,
+          feedbackItem: passProject.feedbackItem,
+          feedbackUrl: passProject.feedbackUrl,
+          feedbackMoney: passProject.feedbackMoney,
+          feedbackDate: passProject.feedbackDate,
+          targetMoney: passProject.targetMoney,
+          teamName: passProject.teamName,
+          phone: passProject.phone,
+          email: passProject.email,
+          relatedUrl: passProject.relatedUrl,
+          introduce: passProject.introduce,
+          content: passProject.content,
+          achievedMoney: passProject.sponsorList.reduce((num: number, sponsor: any) => num + Number(sponsor.money), 0),
+          supportCount: passProject.sponsorList.length,
+          trackingStatus: req.isLogin
+            ? !!passProject.trackList.find((track: any) => String(track.userId) === req!.payload.id)
+            : false
+        }
+      }
+    })
   })
 )
 
@@ -825,17 +815,17 @@ router.delete(
   })
 )
 
-// router.post(
-//   '/test',
-//   catchAll(async (req: paginationReq, res: Response) => {
-//     await Check.create({ ...req.body })
-//     responseSuccess.success({
-//       res,
-//       body: {
-//         message: '成功'
-//       }
-//     })
-//   })
-// )
+router.post(
+  '/test',
+  catchAll(async (req: paginationReq, res: Response) => {
+    await Track.create({ ...req.body })
+    responseSuccess.success({
+      res,
+      body: {
+        message: '成功'
+      }
+    })
+  })
+)
 
 export default router
