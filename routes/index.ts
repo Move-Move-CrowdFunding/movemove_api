@@ -2,6 +2,7 @@ import express from 'express'
 // import catchAll from '../service/catchAll'
 // import { getPayload } from '../utils/genFakeProject'
 
+// import type tokenInfo from '../interface/tokenInfo'
 import projectType from '../interface/project'
 import Project from '../models/Project'
 import Sponsor from '../models/Sponsor'
@@ -19,7 +20,6 @@ interface IndexHome extends projectType {
 const router = express.Router()
 
 /* GET home page. */
-// TODO: 之後還要補上是否已經審核通過的條件
 router.get('/info', parseToken, async function (req, res) {
   /**
      * #swagger.tags = ['Home']
@@ -70,52 +70,95 @@ router.get('/info', parseToken, async function (req, res) {
      *
      */
 
-  const sponsorsTotal = await Sponsor.aggregate([
+  const now = moment().unix()
+
+  const displayData = await Project.aggregate([
     {
-      $group: {
-        _id: '$projectId',
-        achievedMoney: { $sum: '$money' }
+      $match: {
+        startDate: { $lt: now },
+        endDate: { $gt: now }
       }
     },
     {
+      $lookup: {
+        from: 'checks',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'checks'
+      }
+    },
+    {
+      $match: { 'checks.status': 1 }
+    },
+    {
+      $lookup: {
+        from: 'sponsors',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'sponsors'
+      }
+    },
+    {
+      $unwind: '$sponsors'
+    },
+    {
+      $group: {
+        _id: '$_id',
+        achievedMoney: { $sum: '$sponsors.money' },
+        // Keep all the fields from Project
+        doc: { $first: '$$ROOT' }
+      }
+    },
+    {
+      $replaceRoot: { newRoot: { $mergeObjects: ['$doc', '$$ROOT'] } }
+    },
+    {
       $project: {
-        projectId: '$_id',
-        achievedMoney: 1,
-        _id: 0
+        checks: 0,
+        doc: 0,
+        sponsors: 0
       }
     }
   ])
 
-  const now = moment().unix()
-  const allProjects = await Project.find()
+  const projectId = displayData.map((p) => p._id)
+  console.log(projectId)
+  console.log((req as any).payload)
+  const computedProject: IndexHome[] = displayData.map((project) => {
+    if ((req as any).payload) {
+      //
+    }
 
-  const computedProject: IndexHome[] = allProjects.map((project) => {
-    const sponsor = sponsorsTotal.find((sponsor) => sponsor.projectId === project.id)
     let percentage = 0
     if ((project.targetMoney ?? 0) > 0) {
-      percentage = ((sponsor?.achievedMoney || 0) / (project.targetMoney ?? 0)) * 100
+      percentage = ((project?.achievedMoney || 0) / (project.targetMoney ?? 0)) * 100
     }
     return {
-      ...project.toObject(),
-      achievedMoney: sponsor?.achievedMoney || 0,
+      ...project,
       percentage
     }
   })
 
-  const nowProjects = computedProject.filter(
-    (project) => project.startDate ?? (now > 0 && (project.endDate ?? 0) > now)
-  )
-
-  const hotProjects = nowProjects.sort((a, b) => b.percentage - a.percentage).slice(0, 10)
-  const recommendProjects = nowProjects.sort((a, b) => b.startDate - a.startDate).slice(0, 6)
+  const hotProjects = computedProject.sort((a, b) => b.percentage - a.percentage).slice(0, 10)
+  const recommendProjects = computedProject.sort((a, b) => b.startDate - a.startDate).slice(0, 6)
 
   const successProjects = getRandomSubarray(
     computedProject.filter((project) => project.achievedMoney >= project.targetMoney),
     4
   )
 
-  const projectTotal = allProjects.length
-  const amountTotal = sponsorsTotal.reduce((total, project) => total + project.achievedMoney, 0)
+  const projectTotal = await Project.countDocuments()
+
+  const amountTotalResult = await Sponsor.aggregate([
+    {
+      $group: {
+        _id: null,
+        totalMoney: { $sum: '$money' }
+      }
+    }
+  ])
+
+  const amountTotal = amountTotalResult[0] ? amountTotalResult[0].totalMoney : 0
   const peopleTotal = await Sponsor.distinct('userId')
 
   const { isLogin, payload } = req as any

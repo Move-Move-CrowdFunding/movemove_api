@@ -8,7 +8,7 @@
   "host": "localhost:3001",
   "basePath": "/",
   "schemes": [
-    "http"
+    "undefined"
   ],
   "securityDefinitions": {
     "token": {
