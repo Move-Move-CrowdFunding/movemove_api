@@ -5,7 +5,7 @@
     "description": "<h3>MoveMove 募募 募資網站 API 列表</h3><li>您可以在此查看所有的 API 與線上測試</li><li>若有問題反饋可以到我們的<a href=\"https://github.com/Move-Move-CrowdFunding/movemove_api\">Github</a>發issue</li>",
     "version": "1.0.0"
   },
-  "host": "localhost:3000",
+  "host": "localhost:3001",
   "basePath": "/",
   "schemes": [
     "http"
@@ -1021,10 +1021,6 @@
             "schema": {
               "type": "object",
               "properties": {
-                "userId": {
-                  "type": "string",
-                  "example": "66378c5f9fb5b5e7c300e95c"
-                },
                 "introduce": {
                   "type": "string",
                   "example": "團隊介紹"
@@ -1099,7 +1095,6 @@
                 }
               },
               "required": [
-                "userId",
                 "teamName",
                 "title",
                 "email",
@@ -1314,6 +1309,165 @@
             }
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "Projects - 提案"
+        ],
+        "description": "修改提案",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "修改提案格式",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "introduce": {
+                  "type": "string",
+                  "example": "團隊介紹"
+                },
+                "teamName": {
+                  "type": "string",
+                  "example": "提案人姓名/團隊名稱"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "提案標題"
+                },
+                "email": {
+                  "type": "string",
+                  "example": "聯絡信箱"
+                },
+                "categoryKey": {
+                  "type": "number",
+                  "example": 1
+                },
+                "phone": {
+                  "type": "string",
+                  "example": "連絡電話"
+                },
+                "targetMoney": {
+                  "type": "number",
+                  "example": 50000
+                },
+                "content": {
+                  "type": "string",
+                  "example": "<p>提案內容</p>"
+                },
+                "coverUrl": {
+                  "type": "string",
+                  "example": "https://fakeimg.pl/300/"
+                },
+                "describe": {
+                  "type": "string",
+                  "example": "提案簡介"
+                },
+                "videoUrl": {
+                  "type": "string",
+                  "example": "https://youtube.com/"
+                },
+                "startDate": {
+                  "type": "number",
+                  "example": 1678982400
+                },
+                "endDate": {
+                  "type": "number",
+                  "example": 1679846400
+                },
+                "relatedUrl": {
+                  "type": "string",
+                  "example": "https://www.google.com/"
+                },
+                "feedbackItem": {
+                  "type": "string",
+                  "example": "限量精美小熊維尼"
+                },
+                "feedbackUrl": {
+                  "type": "string",
+                  "example": "https://fakeimg.pl/300/"
+                },
+                "feedbackMoney": {
+                  "type": "number",
+                  "example": 100
+                },
+                "feedbackDate": {
+                  "type": "number",
+                  "example": 1682524800
+                },
+                "earlyEnd": {
+                  "type": "boolean",
+                  "example": false
+                }
+              },
+              "required": [
+                "teamName",
+                "title",
+                "email",
+                "categoryKey",
+                "phone",
+                "targetMoney",
+                "content",
+                "coverUrl",
+                "describe",
+                "startDate",
+                "endDate"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "修改提案成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "修改提案成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "修改提案失敗",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "請輸入提案標題"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
       }
     },
     "/project/all": {
@@ -1341,6 +1495,16 @@
                 "name": "main"
               }
             }
+          }
+        }
+      }
+    },
+    "/project/test": {
+      "post": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
           }
         }
       }
@@ -1803,6 +1967,127 @@
                 "name": "main"
               }
             }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/member/password": {
+      "patch": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "密碼修改",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "修改密碼，至少8碼",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "oldPassword": {
+                  "type": "string",
+                  "example": "11111111"
+                },
+                "newPassword": {
+                  "type": "string",
+                  "example": "22222222"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "密碼修改成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "密碼修改成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/member/collection": {
+      "post": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "追蹤或取消追蹤提案",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "要追蹤或取消追蹤的提案編號",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "projectId": {
+                  "type": "string",
+                  "example": "66401d4618d9a03d581946fc"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "狀態更新成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "狀態更新成功"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         },
         "security": [
