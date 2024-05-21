@@ -40,7 +40,6 @@ const autoNotification = async ({
 
   if (content.includes('<projectName>')) {
     const project: projectType | null = await Project.findById(projectId)
-    console.log(project)
     if (!project) {
       return next(globalError({ httpStatus: 404, errMessage: '查無此提案' }))
     } else {

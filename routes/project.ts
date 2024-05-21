@@ -815,17 +815,31 @@ router.delete(
   })
 )
 
-router.post(
-  '/test',
-  catchAll(async (req: paginationReq, res: Response) => {
-    await Track.create({ ...req.body })
-    responseSuccess.success({
-      res,
-      body: {
-        message: '成功'
-      }
-    })
-  })
-)
+// router.post(
+//   '/test',
+//   catchAll(async (req: paginationReq, res: Response, next) => {
+//     // await Track.create({ ...req.body })
+//     const { userId, projectId, content } = req.body as any
+//     console.log('外面', {
+//       userId,
+//       projectId,
+//       content
+//     })
+
+//     const data = await autoNotification({
+//       userId,
+//       projectId,
+//       content,
+//       next
+//     })
+//     responseSuccess.success({
+//       res,
+//       body: {
+//         message: '成功',
+//         data
+//       }
+//     })
+//   })
+// )
 
 export default router
