@@ -12,6 +12,7 @@ import authMiddleware from '../middleware/authMiddleware'
 import Project from '../models/Project'
 import User from '../models/User'
 import Track from '../models/Track'
+import Notification from '../models/Notification'
 
 const router = express.Router()
 
@@ -337,5 +338,51 @@ router.post('/collection', authMiddleware, async (req, res) => {
     })
   }
 })
+
+// 取得未讀通知數量
+router.get(
+  '/notification/unread',
+  authMiddleware,
+  catchAll(async (req: paginationReq, res: Response) => {
+    /**
+     * #swagger.tags = ['Member - 會員中心']
+     * #swagger.description = '取得未讀通知數量'
+     * #swagger.security = [{
+        token: []
+       }]
+     * #swagger.responses[200] = {
+        description: '取得未讀通知成功',
+        schema: {
+          "status": "success",
+          "message": "取得未讀通知成功",
+          "results": {
+            "count": 3
+          }
+        }
+      }
+      * #swagger.responses[401] = {
+        description: 'token 已失效，請重新登入',
+        schema: {
+          "status": "error",
+          "message": "token 已失效，請重新登入"
+        },
+      }
+     */
+    const unReadCount = await Notification.find({
+      userId: req!.user.id,
+      isRead: false
+    }).countDocuments()
+
+    responseSuccess.success({
+      res,
+      body: {
+        message: '取得未讀通知成功',
+        results: {
+          count: unReadCount
+        }
+      }
+    })
+  })
+)
 
 export default router

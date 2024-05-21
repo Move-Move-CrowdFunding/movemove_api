@@ -1499,16 +1499,6 @@
         }
       }
     },
-    "/project/test": {
-      "post": {
-        "description": "",
-        "responses": {
-          "default": {
-            "description": ""
-          }
-        }
-      }
-    },
     "/upload/": {
       "post": {
         "tags": [
@@ -2088,6 +2078,68 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/member/notification/unread": {
+      "get": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "取得未讀通知數量",
+        "responses": {
+          "200": {
+            "description": "取得未讀通知成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得未讀通知成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number",
+                      "example": 3
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "token 已失效，請重新登入",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "token 已失效，請重新登入"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           }
         },
         "security": [
