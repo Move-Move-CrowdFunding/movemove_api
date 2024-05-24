@@ -5,6 +5,7 @@ import ProjectModel from '../models/Project'
 import CheckModel from '../models/Check'
 import { Types } from 'mongoose'
 import createCheck from '../utils/createCheck'
+import autoNotification from '../utils/autoNotification'
 
 const router = express.Router()
 
@@ -30,7 +31,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     }
     * #swagger.parameters['sortDesc'] = {
       in: 'query',
-      description: '提案新舊排序',
+      description: '提案新舊排序，預設為 false (新->舊)',
       type: 'boolean',
       default: 'false'
     }
@@ -276,6 +277,12 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
 
   try {
     const projectId = req.params.projectId || 'empty'
+    if (!Types.ObjectId.isValid(String(projectId))) {
+      return res.status(400).json({
+        status: 'error',
+        message: '錯誤的提案編號格式'
+      })
+    }
     const projectData = await ProjectModel.aggregate([
       {
         $match: { _id: new Types.ObjectId(projectId) }
@@ -353,20 +360,27 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
       }
     ])
 
-    return res.status(200).json({
-      status: 'success',
-      message: '取得提案資料成功',
-      results: projectData
-    })
+    if (projectData[0]) {
+      return res.status(200).json({
+        status: 'success',
+        message: '取得提案資料成功',
+        results: projectData[0]
+      })
+    } else {
+      return res.status(404).json({
+        status: 'error',
+        message: '找不到此提案'
+      })
+    }
   } catch (error) {
-    return res.status(404).json({
+    return res.status(500).json({
       status: 'error',
-      message: '找不到此提案'
+      message: '伺服器錯誤'
     })
   }
 })
 
-// 管理端 審核提案內容 POST /admin/projects/{projectId} TODO: 發送通知
+// 管理端 審核提案內容 POST /admin/projects/{projectId}
 router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, res, next) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
@@ -398,10 +412,12 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
     const errorMsg = []
     const { approve, content } = req.body
     const projectId = req.params.projectId || 'empty'
+    let userId = (req as any).user
 
     // 檢查提案編號
     if (Types.ObjectId.isValid(String(projectId))) {
       const findProjectId = await ProjectModel.findById(projectId)
+      userId = findProjectId?.userId
       if (!findProjectId) {
         return res.status(404).json({
           status: 'error',
@@ -438,6 +454,20 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
         status: approve,
         next
       })
+
+      const notification = await autoNotification({
+        userId,
+        projectId: new Types.ObjectId(projectId),
+        content: '審核通知「<projectName>」',
+        next
+      })
+
+      if (!notification) {
+        return res.status(400).json({
+          status: 'error',
+          message: '建立通知時發生錯誤'
+        })
+      }
 
       return res.status(200).json({
         status: 'success',

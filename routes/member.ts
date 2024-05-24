@@ -268,7 +268,7 @@ router.patch('/password', authMiddleware, async (req, res) => {
   }
 })
 
-// 用戶端 修改密碼 POST /member/collection
+// 用戶端 追蹤、退追提案 POST /member/collection
 router.post('/collection', authMiddleware, async (req, res) => {
   /**
    * #swagger.tags = ['Member - 會員中心']
@@ -334,6 +334,114 @@ router.post('/collection', authMiddleware, async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       status: 'error',
+      message: '伺服器錯誤'
+    })
+  }
+})
+
+// 用戶端 追蹤列表 GET /member/collection
+router.get('/collection', authMiddleware, async (req, res) => {
+  /**
+   * #swagger.tags = ['Member - 會員中心']
+   * #swagger.description = '取得追蹤列表'
+   * #swagger.security = [{
+      token: []
+    }]
+    * #swagger.parameters['pageNo'] = {
+      in: 'query',
+      description: '當前頁數',
+      type: 'number',
+      default: '1'
+    }
+    * #swagger.parameters['pageSize'] = {
+      in: 'query',
+      description: '單頁筆數',
+      type: 'number',
+      default: '10'
+    }
+  * #swagger.responses[200] = {
+    description: '取得追蹤列表成功',
+    schema: {
+      "status": "success",
+      "message": "取得追蹤列表成功",
+      "results": {
+          "projects": "...data"
+        },
+      "pagination": {
+          "pageNo": 1,
+          "pageSize": 10,
+          "totalPage": 3,
+          "count": 25,
+          "sortDesc": false,
+          "status": 0,
+          "search": "關鍵字搜尋"
+        }
+    }
+  }
+  *
+  */
+
+  try {
+    // 請求參數檢查
+    const errorMsg = []
+    const { id } = (req as any).user
+    const { pageNo = 1, pageSize = 10 } = req.query
+
+    // 當前頁數
+    if (!Number(pageNo) || Number(pageNo) < 1) {
+      errorMsg.push('當前頁數錯誤')
+    }
+
+    // 單頁筆數
+    if (!Number(pageSize) || Number(pageSize) < 1) {
+      errorMsg.push('單頁筆數錯誤')
+    }
+
+    if (errorMsg.length === 0) {
+      const trackFilter = { userId: new Types.ObjectId(id) }
+      const totalTracks = await Track.countDocuments(trackFilter)
+      const totalPage = Math.ceil(totalTracks / Number(pageSize))
+      const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
+
+      const tracks = await Track.aggregate([
+        { $match: trackFilter },
+        {
+          $lookup: {
+            from: 'projects',
+            localField: 'projectId',
+            foreignField: '_id',
+            as: 'project'
+          }
+        },
+        { $unwind: '$project' },
+        { $replaceRoot: { newRoot: '$project' } },
+        { $addFields: { trackingStatus: true } },
+        { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
+        { $limit: Number(pageSize) }
+      ])
+
+      return res.status(200).json({
+        status: 'success',
+        message: totalTracks ? '取得追蹤列表成功' : '還沒有追蹤的提案',
+        results: tracks,
+        pagination: {
+          pageNo: Number(safePageNo),
+          pageSize: Number(pageSize),
+          hasNext: Number(safePageNo) < totalPage,
+          hasPre: Number(safePageNo) > 1,
+          totalPage,
+          count: totalTracks
+        }
+      })
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: `發生錯誤 ${errorMsg.join()}`
+      })
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
       message: '伺服器錯誤' + error
     })
   }
@@ -349,7 +457,7 @@ router.get(
      * #swagger.description = '取得未讀通知數量'
      * #swagger.security = [{
         token: []
-       }]
+      }]
      * #swagger.responses[200] = {
         description: '取得未讀通知成功',
         schema: {
