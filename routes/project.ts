@@ -418,7 +418,31 @@ router.post(
         description: '發起提案成功',
         schema: {
           "status": "success",
-          "message": "資料新增成功"
+          "message": "資料新增成功",
+          "results": {
+            "userId": "663e3f3452027aeb8696000c",
+            "introduce": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。",
+            "teamName": "弱勢救星",
+            "email": "nomail@mail.com",
+            "phone": "0938938438",
+            "title": "測試送審",
+            "categoryKey": 2,
+            "targetMoney": 30000,
+            "startDate": 1720713600,
+            "endDate": 1721577600,
+            "describe": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。",
+            "coverUrl": "https://fakeimg.pl/300/",
+            "content": "<p>test</p>",
+            "videoUrl": "",
+            "relatedUrl": "",
+            "feedbackItem": "限量精美小熊維尼",
+            "feedbackUrl": "https://fakeimg.pl/300/",
+            "feedbackMoney": 100,
+            "feedbackDate": 1721577600,
+            "createTime": 1716704528,
+            "updateTime": 1716704528,
+            "id": "6652d5104fd5c3080e3e5795"
+          }
         },
        }
      * #swagger.responses[400] = {
@@ -567,7 +591,8 @@ router.post(
     responseSuccess.success({
       res,
       body: {
-        message: '資料新增成功'
+        message: '資料新增成功',
+        results: project
       }
     })
   })
