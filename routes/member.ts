@@ -13,6 +13,7 @@ import authMiddleware from '../middleware/authMiddleware'
 import Project from '../models/Project'
 import User from '../models/User'
 import Check from '../models/Check'
+import Sponsor from '../models/Sponsor'
 import Track from '../models/Track'
 import Notification from '../models/Notification'
 
@@ -220,7 +221,6 @@ router.get('/projects', authMiddleware, async (req, res) => {
     }
 
     if (errorMsg.length === 0) {
-
       const list = await Project.aggregate([
         {
           $match: { userId: new Types.ObjectId(userId) }
@@ -299,7 +299,6 @@ router.get('/projects', authMiddleware, async (req, res) => {
       const totalPage = Math.ceil(totalProjects / Number(pageSize))
       const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
 
-
       const results = await Project.aggregate([
         {
           $match: { userId: new Types.ObjectId(userId) }
@@ -348,7 +347,22 @@ router.get('/projects', authMiddleware, async (req, res) => {
         {
           $project: {
             latestCheck: 0,
-            reviewLog: 0
+            reviewLog: 0,
+            userId: 0,
+            introduce: 0,
+            teamName: 0,
+            email: 0,
+            phone: 0,
+            describe: 0,
+            content: 0,
+            videoUrl: 0,
+            relatedUrl: 0,
+            feedbackItem: 0,
+            feedbackUrl: 0,
+            feedbackMoney: 0,
+            feedbackDate: 0,
+            createTime: 0,
+            updateTime: 0,
           }
         },
         { 
@@ -357,7 +371,41 @@ router.get('/projects', authMiddleware, async (req, res) => {
           }
         },
         { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
-        { $limit: Number(pageSize) }
+        { $limit: Number(pageSize) },
+        {
+          $lookup: {
+            from: 'sponsors',
+            let: { projectId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$projectId', '$$projectId']
+                  }
+                }
+              }
+            ],
+            as: 'sponsorLog'
+          }
+        },
+        {
+          $addFields: {
+            sponsorLog: {
+              $map: {
+                input: '$sponsorLog',
+                as: 'sponsor',
+                in: {
+                  $mergeObjects: ['$$sponsor']
+                }
+              }
+            }
+          }
+        },
+        {
+          $addFields: {
+            sponsorCount:{$size: '$sponsorLog'}
+            }
+        }
       ])
 
       return res.status(200).json({
