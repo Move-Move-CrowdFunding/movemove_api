@@ -196,8 +196,6 @@ router.get(
 
 // 我的提案列表
 router.get('/projects', authMiddleware, async (req, res) => {
-  // console.log(res)
-
   try {
     const userId = (req as any).user.id
 
@@ -269,30 +267,45 @@ router.get('/projects', authMiddleware, async (req, res) => {
         {
           $project: {
             latestCheck: 0,
-            reviewLog: 0
+            reviewLog: 0,
+            userId: 0,
+            introduce: 0,
+            teamName: 0,
+            email: 0,
+            phone: 0,
+            describe: 0,
+            content: 0,
+            videoUrl: 0,
+            relatedUrl: 0,
+            feedbackItem: 0,
+            feedbackUrl: 0,
+            feedbackMoney: 0,
+            feedbackDate: 0,
+            createTime: 0,
+            updateTime: 0,
           }
         }
       ])
 
-      let eachStateCount = [0,0,0,0]
-      eachStateCount[0] = list.filter((obj)=> obj.state==1).length
-      eachStateCount[1] = list.filter((obj)=> obj.state==0).length
-      eachStateCount[2] = list.filter((obj)=> obj.state==-1).length
-      eachStateCount[3] = list.filter((obj)=> obj.state==2).length
-      
+      const eachStateCount = {
+        ongoing:list.filter((obj)=> obj.state==1).length,
+        pending:list.filter((obj)=> obj.state==0).length,
+        rejected:list.filter((obj)=> obj.state==-1).length,
+        ended:list.filter((obj)=> obj.state==2).length
+      }
       let totalProjects = 0
       switch (Number(state)) {
         case 1:
-          totalProjects = eachStateCount[0]
+          totalProjects = eachStateCount.ongoing
           break
         case 0:
-          totalProjects = eachStateCount[1]
+          totalProjects = eachStateCount.pending
           break
         case -1:
-          totalProjects = eachStateCount[2]
+          totalProjects = eachStateCount.rejected
           break
         case 2:
-          totalProjects = eachStateCount[3]
+          totalProjects = eachStateCount.ended
           break
       }
 
