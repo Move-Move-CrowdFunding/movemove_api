@@ -196,6 +196,94 @@ router.get(
 
 // 我的提案列表
 router.get('/projects', authMiddleware, async (req, res) => {
+   /**
+     * #swagger.tags = ['Member - 會員中心']
+     * #swagger.description = '我的提案列表'
+     * #swagger.security = [{
+        token: []
+       }]
+    * #swagger.parameters['state'] = {
+      in: 'query',
+      description: '提案狀態 （N = 0:送審 1:[預設]核准 -1:否准 2:已結束 3:全部）',
+      type: 'number',
+      default: '1'
+    }
+    * #swagger.parameters['pageNo'] = {
+      in: 'query',
+      description: '當前頁數',
+      type: 'number',
+      default: '1'
+    }
+    * #swagger.parameters['pageSize'] = {
+      in: 'query',
+      description: '單頁筆數',
+      type: 'number',
+      default: '10'
+    }
+
+     * #swagger.responses[200] = {
+        description: '取得我的提案列表成功',
+        schema: {
+          "status": "success",
+          "message": "取得我的提案列表成功",
+          "results": [
+            {
+              "_id": "6654455a70970a49de414b45",
+              "title": "支持烏野再次踏上東京橘色球場",
+              "categoryKey": 1,
+              "targetMoney": 100000,
+              "startDate": 1715792000,
+              "endDate": 1732384000,
+              "coverUrl": "https://i.imgur.com/UqUdehL.png",
+              "state": 1,
+              "sponsorLog": [
+                {
+                  "_id": "6655989c0f1412fbcf6342a8",
+                  "userId": "66557c99fe4eac8981c4f746",
+                  "projectId": "6654455a70970a49de414b45",
+                  "money": 1000,
+                  "userName": "YC",
+                  "phone": "0987654321",
+                  "receiver": "YCYC",
+                  "receiverPhone": "0987654321",
+                  "address": "YC家",
+                  "isNeedFeedback": true,
+                  "createTime": 1720000000,
+                  "updateTime": 1720000000
+                }
+              ],
+              "sponsorCount": 0
+            }
+          ],
+          "eachStateCount": {
+            "ongoing": 3,
+            "pending": 2,
+            "rejected": 1,
+            "ended": 0
+          },
+          "pagination": {
+            "pageNo": 1,
+            "pageSize": 10,
+            "count": 3,
+            "state": "1"
+          }
+        }
+      }
+      * #swagger.responses[400] = {
+        description: '發生錯誤',
+        schema: {
+          "status": "error",
+          "message": "發生錯誤"
+        },
+      }
+      * #swagger.responses[500] = {
+        description: '伺服器錯誤',
+        schema: {
+          "status": "error",
+          "message": "伺服器錯誤"
+        },
+      }
+     */
   try {
     const userId = (req as any).user.id
 
