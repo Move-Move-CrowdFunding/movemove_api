@@ -32,7 +32,8 @@ const pagination = async ({ database, option, req, next }: Pagination) => {
         ['lookup', '$lookup'],
         ['lookup1', '$lookup'],
         ['lookup2', '$lookup'],
-        ['match', '$match']
+        ['match', '$match'],
+        ['set', '$set']
       ])
       if (keyMap.has(objectName)) {
         optionArr.push({

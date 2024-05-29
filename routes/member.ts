@@ -196,7 +196,7 @@ router.get(
 
 // 我的提案列表
 router.get('/projects', authMiddleware, async (req, res) => {
-   /**
+  /**
      * #swagger.tags = ['Member - 會員中心']
      * #swagger.description = '我的提案列表'
      * #swagger.security = [{
@@ -370,16 +370,16 @@ router.get('/projects', authMiddleware, async (req, res) => {
             feedbackMoney: 0,
             feedbackDate: 0,
             createTime: 0,
-            updateTime: 0,
+            updateTime: 0
           }
         }
       ])
 
       const eachStateCount = {
-        ongoing:list.filter((obj)=> obj.state==1).length,
-        pending:list.filter((obj)=> obj.state==0).length,
-        rejected:list.filter((obj)=> obj.state==-1).length,
-        ended:list.filter((obj)=> obj.state==2).length
+        ongoing: list.filter((obj) => Number(obj.state) === 1).length,
+        pending: list.filter((obj) => Number(obj.state) === 0).length,
+        rejected: list.filter((obj) => Number(obj.state) === -1).length,
+        ended: list.filter((obj) => Number(obj.state) === 2).length
       }
       let totalProjects = 0
       switch (Number(state)) {
@@ -463,10 +463,10 @@ router.get('/projects', authMiddleware, async (req, res) => {
             feedbackMoney: 0,
             feedbackDate: 0,
             createTime: 0,
-            updateTime: 0,
+            updateTime: 0
           }
         },
-        { 
+        {
           $match: {
             state: Number(state)
           }
@@ -504,8 +504,8 @@ router.get('/projects', authMiddleware, async (req, res) => {
         },
         {
           $addFields: {
-            sponsorCount:{$size: '$sponsorLog'}
-            }
+            sponsorCount: { $size: '$sponsorLog' }
+          }
         }
       ])
 
@@ -519,17 +519,15 @@ router.get('/projects', authMiddleware, async (req, res) => {
           pageSize: Number(pageSize),
           count: totalProjects,
           state
-        },
+        }
       })
-    }
-    else {
+    } else {
       return res.status(400).json({
         status: 'error',
         message: `發生錯誤 ${errorMsg.join()}`
       })
     }
-  }
-  catch (error) {
+  } catch (error) {
     console.log(error)
     return res.status(500).json({
       status: 'error',
@@ -793,6 +791,130 @@ router.get('/collection', authMiddleware, async (req, res) => {
     })
   }
 })
+
+// 我的通知
+router.get(
+  '/notification',
+  authMiddleware,
+  catchAll(async (req: paginationReq, res: Response, next: NextFunction) => {
+    /**
+     * #swagger.tags = ['Member - 會員中心']
+     * #swagger.description = '取得未讀通知數量'
+     * #swagger.security = [{
+        token: []
+      }]
+     * #swagger.parameters['pageNo'] = {
+       in: 'query',
+       description: '當前第幾頁',
+       type: 'number',
+       default: '1'
+      }
+     * #swagger.parameters['pageSize'] = {
+       in: 'query',
+       description: '一頁有幾筆',
+       type: 'number',
+       default: '10'
+      }
+     * #swagger.responses[200] = {
+        description: '取得最新通知成功',
+        schema: {
+          "status": "success",
+          "message": "取得未讀通知成功",
+          "results": [
+            {
+              "id": "664cc9c63171e09ae23b2c9e",
+              "content": "「測試修改送審」審核已過審",
+              "isRead": true,
+              "createTime": 1716308422,
+              "project": {
+                  "id": "66403c34b00d1fe281742a62",
+                  "title": "測試修改送審",
+                  "coverUrl": "https://fakeimg.pl/300/"
+              }
+            }
+          ],
+          "pagination": {
+            "count": 2,
+            "pageNo": 1,
+            "pageSize": 10,
+            "hasPre": false,
+            "hasNext": false,
+            "totalPage": 1
+          },
+          "unReadCount": 0
+        }
+      }
+      * #swagger.responses[401] = {
+        description: 'token 已失效，請重新登入',
+        schema: {
+          "status": "error",
+          "message": "token 已失效，請重新登入"
+        },
+      }
+     */
+    const option: paginationOption = {
+      filter: {
+        userId: new Types.ObjectId(req.user.id)
+      },
+      sort: {
+        createTime: -1
+      },
+      set: {
+        isRead: true
+      },
+      populate: {
+        path: 'projectId'
+      }
+    }
+
+    const pageData: void | paginationData = await pagination({
+      database: Notification,
+      option,
+      req,
+      next
+    })
+
+    if (!pageData) {
+      return next(
+        globalError({
+          errMessage: '資料讀取錯誤'
+        })
+      )
+    }
+
+    await Notification.updateMany(
+      { _id: { $in: pageData.results.map((item) => item._id) } },
+      { $set: { isRead: true } }
+    )
+
+    const unReadCount = await Notification.find({
+      userId: req!.user.id,
+      isRead: false
+    }).countDocuments()
+
+    const results = pageData.results.map((item: any) => ({
+      id: item._id,
+      content: item.content,
+      isRead: item.isRead,
+      createTime: item.createTime,
+      project: {
+        id: item.projectId.id,
+        title: item.projectId.title,
+        coverUrl: item.projectId.coverUrl
+      }
+    }))
+
+    responseSuccess.success({
+      res,
+      body: {
+        message: '取得最新通知成功',
+        ...pageData,
+        results,
+        unReadCount
+      }
+    })
+  })
+)
 
 // 取得未讀通知數量
 router.get(

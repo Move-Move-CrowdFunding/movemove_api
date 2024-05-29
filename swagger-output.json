@@ -8,7 +8,7 @@
   "host": "localhost:3001",
   "basePath": "/",
   "schemes": [
-    "undefined"
+    "http"
   ],
   "securityDefinitions": {
     "token": {
@@ -1123,6 +1123,99 @@
                 "message": {
                   "type": "string",
                   "example": "資料新增成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "example": "663e3f3452027aeb8696000c"
+                    },
+                    "introduce": {
+                      "type": "string",
+                      "example": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。"
+                    },
+                    "teamName": {
+                      "type": "string",
+                      "example": "弱勢救星"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "nomail@mail.com"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "0938938438"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "測試送審"
+                    },
+                    "categoryKey": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "targetMoney": {
+                      "type": "number",
+                      "example": 30000
+                    },
+                    "startDate": {
+                      "type": "number",
+                      "example": 1720713600
+                    },
+                    "endDate": {
+                      "type": "number",
+                      "example": 1721577600
+                    },
+                    "describe": {
+                      "type": "string",
+                      "example": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。"
+                    },
+                    "coverUrl": {
+                      "type": "string",
+                      "example": "https://fakeimg.pl/300/"
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "<p>test</p>"
+                    },
+                    "videoUrl": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "relatedUrl": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "feedbackItem": {
+                      "type": "string",
+                      "example": "限量精美小熊維尼"
+                    },
+                    "feedbackUrl": {
+                      "type": "string",
+                      "example": "https://fakeimg.pl/300/"
+                    },
+                    "feedbackMoney": {
+                      "type": "number",
+                      "example": 100
+                    },
+                    "feedbackDate": {
+                      "type": "number",
+                      "example": 1721577600
+                    },
+                    "createTime": {
+                      "type": "number",
+                      "example": 1716704528
+                    },
+                    "updateTime": {
+                      "type": "number",
+                      "example": 1716704528
+                    },
+                    "id": {
+                      "type": "string",
+                      "example": "6652d5104fd5c3080e3e5795"
+                    }
+                  }
                 }
               },
               "xml": {
@@ -1569,6 +1662,13 @@
         "description": "取得提案列表",
         "parameters": [
           {
+            "name": "status",
+            "in": "query",
+            "description": "提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）",
+            "type": "number",
+            "default": "0"
+          },
+          {
             "name": "pageNo",
             "in": "query",
             "description": "當前頁數",
@@ -1585,16 +1685,9 @@
           {
             "name": "sortDesc",
             "in": "query",
-            "description": "提案新舊排序",
+            "description": "提案新舊排序，預設為 false (新->舊)",
             "type": "boolean",
             "default": "false"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "description": "提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）",
-            "type": "number",
-            "default": "0"
           },
           {
             "name": "search",
@@ -1723,8 +1816,14 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "404": {
             "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         },
         "security": [
@@ -1966,6 +2065,243 @@
         ]
       }
     },
+    "/member/projects": {
+      "get": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "我的提案列表",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "description": "提案狀態 （N = 0:送審 1:[預設]核准 -1:否准 2:已結束 3:全部）",
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "當前頁數",
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "單頁筆數",
+            "type": "number",
+            "default": "10"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取得我的提案列表成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得我的提案列表成功"
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "6654455a70970a49de414b45"
+                      },
+                      "title": {
+                        "type": "string",
+                        "example": "支持烏野再次踏上東京橘色球場"
+                      },
+                      "categoryKey": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "targetMoney": {
+                        "type": "number",
+                        "example": 100000
+                      },
+                      "startDate": {
+                        "type": "number",
+                        "example": 1715792000
+                      },
+                      "endDate": {
+                        "type": "number",
+                        "example": 1732384000
+                      },
+                      "coverUrl": {
+                        "type": "string",
+                        "example": "https://i.imgur.com/UqUdehL.png"
+                      },
+                      "state": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "sponsorLog": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "6655989c0f1412fbcf6342a8"
+                            },
+                            "userId": {
+                              "type": "string",
+                              "example": "66557c99fe4eac8981c4f746"
+                            },
+                            "projectId": {
+                              "type": "string",
+                              "example": "6654455a70970a49de414b45"
+                            },
+                            "money": {
+                              "type": "number",
+                              "example": 1000
+                            },
+                            "userName": {
+                              "type": "string",
+                              "example": "YC"
+                            },
+                            "phone": {
+                              "type": "string",
+                              "example": "0987654321"
+                            },
+                            "receiver": {
+                              "type": "string",
+                              "example": "YCYC"
+                            },
+                            "receiverPhone": {
+                              "type": "string",
+                              "example": "0987654321"
+                            },
+                            "address": {
+                              "type": "string",
+                              "example": "YC家"
+                            },
+                            "isNeedFeedback": {
+                              "type": "boolean",
+                              "example": true
+                            },
+                            "createTime": {
+                              "type": "number",
+                              "example": 1720000000
+                            },
+                            "updateTime": {
+                              "type": "number",
+                              "example": 1720000000
+                            }
+                          }
+                        }
+                      },
+                      "sponsorCount": {
+                        "type": "number",
+                        "example": 0
+                      }
+                    }
+                  }
+                },
+                "eachStateCount": {
+                  "type": "object",
+                  "properties": {
+                    "ongoing": {
+                      "type": "number",
+                      "example": 3
+                    },
+                    "pending": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "rejected": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "ended": {
+                      "type": "number",
+                      "example": 0
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "pageNo": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "count": {
+                      "type": "number",
+                      "example": 3
+                    },
+                    "state": {
+                      "type": "string",
+                      "example": "1"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "發生錯誤",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "發生錯誤"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "500": {
+            "description": "伺服器錯誤",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "伺服器錯誤"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
     "/member/password": {
       "patch": {
         "tags": [
@@ -2078,6 +2414,245 @@
           },
           "500": {
             "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "取得追蹤列表",
+        "parameters": [
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "當前頁數",
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "單頁筆數",
+            "type": "number",
+            "default": "10"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取得追蹤列表成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得追蹤列表成功"
+                },
+                "results": {
+                  "type": "object",
+                  "properties": {
+                    "projects": {
+                      "type": "string",
+                      "example": "...data"
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "pageNo": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "totalPage": {
+                      "type": "number",
+                      "example": 3
+                    },
+                    "count": {
+                      "type": "number",
+                      "example": 25
+                    },
+                    "sortDesc": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "status": {
+                      "type": "number",
+                      "example": 0
+                    },
+                    "search": {
+                      "type": "string",
+                      "example": "關鍵字搜尋"
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/member/notification": {
+      "get": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "取得未讀通知數量",
+        "parameters": [
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "當前第幾頁",
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "一頁有幾筆",
+            "type": "number",
+            "default": "10"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取得最新通知成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得未讀通知成功"
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "664cc9c63171e09ae23b2c9e"
+                      },
+                      "content": {
+                        "type": "string",
+                        "example": "「測試修改送審」審核已過審"
+                      },
+                      "isRead": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "createTime": {
+                        "type": "number",
+                        "example": 1716308422
+                      },
+                      "project": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "66403c34b00d1fe281742a62"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "測試修改送審"
+                          },
+                          "coverUrl": {
+                            "type": "string",
+                            "example": "https://fakeimg.pl/300/"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "pageNo": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "hasPre": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "hasNext": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "totalPage": {
+                      "type": "number",
+                      "example": 1
+                    }
+                  }
+                },
+                "unReadCount": {
+                  "type": "number",
+                  "example": 0
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "401": {
+            "description": "token 已失效，請重新登入",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "error"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "token 已失效，請重新登入"
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
           }
         },
         "security": [
