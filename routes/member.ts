@@ -2,15 +2,18 @@ import express, { Response, NextFunction } from 'express'
 import { Types } from 'mongoose'
 import bcrypt from 'bcrypt'
 
-import type { paginationReq } from '../interface/pagination'
+import type { paginationOption, paginationReq, paginationData } from '../interface/pagination'
 import catchAll from '../service/catchAll'
 import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
+import pagination from '../utils/pagination'
 
 import authMiddleware from '../middleware/authMiddleware'
 
 import Project from '../models/Project'
 import User from '../models/User'
+import Check from '../models/Check'
+import Sponsor from '../models/Sponsor'
 import Track from '../models/Track'
 import Notification from '../models/Notification'
 
@@ -190,6 +193,262 @@ router.get(
     )
   })
 )
+
+// 我的提案列表
+router.get('/projects', authMiddleware, async (req, res) => {
+  try {
+    const userId = (req as any).user.id
+
+    // 請求參數檢查
+    const errorMsg = []
+    const { pageNo = 1, pageSize = 10, state = 1 } = req.query
+
+    // 當前頁數
+    if (!Number(pageNo) || Number(pageNo) < 1) {
+      errorMsg.push('當前頁數錯誤')
+    }
+
+    // 單頁筆數
+    if (!Number(pageSize) || Number(pageSize) < 1) {
+      errorMsg.push('單頁筆數錯誤')
+    }
+
+    // 提案狀態 （N = 0:[預設]送審 1:ongoing -1:rejected 2:已結束）
+    if (![0, 1, -1, 2].includes(Number(state))) {
+      errorMsg.push('提案狀態錯誤')
+    }
+
+    if (errorMsg.length === 0) {
+      const list = await Project.aggregate([
+        {
+          $match: { userId: new Types.ObjectId(userId) }
+        },
+        {
+          $lookup: {
+            from: 'checks',
+            let: { projectId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$projectId', '$$projectId']
+                  }
+                }
+              },
+              { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
+            ],
+            as: 'reviewLog'
+          }
+        },
+        {
+          $addFields: {
+            reviewLog: {
+              $map: {
+                input: '$reviewLog',
+                as: 'check',
+                in: {
+                  $mergeObjects: ['$$check', { timestamp: '$$check.updateTime' }]
+                }
+              }
+            }
+          }
+        },
+        {
+          $addFields: {
+            latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
+          }
+        },
+        {
+          $addFields: {
+            state: '$latestCheck.status'
+          }
+        },
+        { $unwind: '$state' },
+        {
+          $project: {
+            latestCheck: 0,
+            reviewLog: 0,
+            userId: 0,
+            introduce: 0,
+            teamName: 0,
+            email: 0,
+            phone: 0,
+            describe: 0,
+            content: 0,
+            videoUrl: 0,
+            relatedUrl: 0,
+            feedbackItem: 0,
+            feedbackUrl: 0,
+            feedbackMoney: 0,
+            feedbackDate: 0,
+            createTime: 0,
+            updateTime: 0,
+          }
+        }
+      ])
+
+      const eachStateCount = {
+        ongoing:list.filter((obj)=> obj.state==1).length,
+        pending:list.filter((obj)=> obj.state==0).length,
+        rejected:list.filter((obj)=> obj.state==-1).length,
+        ended:list.filter((obj)=> obj.state==2).length
+      }
+      let totalProjects = 0
+      switch (Number(state)) {
+        case 1:
+          totalProjects = eachStateCount.ongoing
+          break
+        case 0:
+          totalProjects = eachStateCount.pending
+          break
+        case -1:
+          totalProjects = eachStateCount.rejected
+          break
+        case 2:
+          totalProjects = eachStateCount.ended
+          break
+      }
+
+      const totalPage = Math.ceil(totalProjects / Number(pageSize))
+      const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
+
+      const results = await Project.aggregate([
+        {
+          $match: { userId: new Types.ObjectId(userId) }
+        },
+        {
+          $lookup: {
+            from: 'checks',
+            let: { projectId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$projectId', '$$projectId']
+                  }
+                }
+              },
+              { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
+            ],
+            as: 'reviewLog'
+          }
+        },
+        {
+          $addFields: {
+            reviewLog: {
+              $map: {
+                input: '$reviewLog',
+                as: 'check',
+                in: {
+                  $mergeObjects: ['$$check', { timestamp: '$$check.updateTime' }]
+                }
+              }
+            }
+          }
+        },
+        {
+          $addFields: {
+            latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
+          }
+        },
+        {
+          $addFields: {
+            state: '$latestCheck.status'
+          }
+        },
+        { $unwind: '$state' },
+        {
+          $project: {
+            latestCheck: 0,
+            reviewLog: 0,
+            userId: 0,
+            introduce: 0,
+            teamName: 0,
+            email: 0,
+            phone: 0,
+            describe: 0,
+            content: 0,
+            videoUrl: 0,
+            relatedUrl: 0,
+            feedbackItem: 0,
+            feedbackUrl: 0,
+            feedbackMoney: 0,
+            feedbackDate: 0,
+            createTime: 0,
+            updateTime: 0,
+          }
+        },
+        { 
+          $match: {
+            state: Number(state)
+          }
+        },
+        { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
+        { $limit: Number(pageSize) },
+        {
+          $lookup: {
+            from: 'sponsors',
+            let: { projectId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$projectId', '$$projectId']
+                  }
+                }
+              }
+            ],
+            as: 'sponsorLog'
+          }
+        },
+        {
+          $addFields: {
+            sponsorLog: {
+              $map: {
+                input: '$sponsorLog',
+                as: 'sponsor',
+                in: {
+                  $mergeObjects: ['$$sponsor']
+                }
+              }
+            }
+          }
+        },
+        {
+          $addFields: {
+            sponsorCount:{$size: '$sponsorLog'}
+            }
+        }
+      ])
+
+      return res.status(200).json({
+        status: 'success',
+        message: totalProjects ? '提案列表取得成功' : '找不到相符條件的資料',
+        results,
+        eachStateCount,
+        pagination: {
+          pageNo: Number(safePageNo),
+          pageSize: Number(pageSize),
+          count: totalProjects,
+          state
+        },
+      })
+    }
+    else {
+      return res.status(400).json({
+        status: 'error',
+        message: `發生錯誤 ${errorMsg.join()}`
+      })
+    }
+  }
+  catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      status: 'error',
+      message: '伺服器錯誤'
+    })
+  }
+})
 
 // 用戶端 修改密碼 PATCH /member/password
 router.patch('/password', authMiddleware, async (req, res) => {
