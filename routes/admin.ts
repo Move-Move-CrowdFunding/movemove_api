@@ -31,9 +31,9 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     }
     * #swagger.parameters['sortDesc'] = {
       in: 'query',
-      description: '提案新舊排序，預設為 false (新->舊)',
+      description: '提案新舊排序，預設為 true，也可以用 1、-1 參數<br>true、1 為新到舊排序<br>false、-1 為舊到新排序',
       type: 'boolean',
-      default: 'false'
+      default: 'true'
     }
     * #swagger.parameters['status'] = {
       in: 'query',
@@ -52,15 +52,37 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     schema: {
         "status": "success",
         "message": "取得提案列表",
-        "results": {
-            "projects": "...data"
-        },
+        "results": [{
+          "_id": "6652d5104fd5c3080e3e5795",
+          "introduce": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。",
+          "teamName": "弱勢救星",
+          "email": "nomail@mail.com",
+          "phone": "0938938438",
+          "title": "測試送審",
+          "categoryKey": 2,
+          "targetMoney": 30000,
+          "startDate": 1720713600,
+          "endDate": 1721577600,
+          "describe": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。",
+          "coverUrl": "https://fakeimg.pl/300/",
+          "content": "<p>test</p>",
+          "videoUrl": "",
+          "relatedUrl": "",
+          "feedbackItem": "限量精美小熊維尼",
+          "feedbackUrl": "https://fakeimg.pl/300/",
+          "feedbackMoney": 100,
+          "feedbackDate": 1721577600,
+          "createTime": 1716704528,
+          "updateTime": 1716704528,
+          "nickName": "",
+          "status": 0
+        }],
         "pagination": {
             "pageNo": 1,
             "pageSize": 10,
-            "totalPage": 3,
-            "count": 25,
-            "sortDesc": false,
+            "totalPage": 1,
+            "count": 1,
+            "sortDesc": true,
             "status": 0,
             "search": "關鍵字搜尋"
           }
@@ -74,7 +96,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     // 請求參數檢查
     const errorMsg = []
     const { pageNo = 1, pageSize = 10, sortDesc = 'false', status = 0, search = '' } = req.query
-    let sort: any = '1'
+    let sort = 1
     // 當前頁數
     if (!Number(pageNo) || Number(pageNo) < 1) {
       errorMsg.push('當前頁數錯誤')
@@ -86,10 +108,10 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     }
 
     // 提案新舊排序
-    if (!['true', 'false'].includes(sortDesc.toString())) {
+    if (![1, -1, 'true', 'false'].includes(sortDesc as any)) {
       errorMsg.push('提案新舊排序錯誤')
     } else {
-      sort = sortDesc === 'true' ? 1 : -1
+      sort = [-1, 'false'].includes(sortDesc as any) ? -1 : 1
     }
 
     // 提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）
@@ -221,7 +243,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
             reviewLog: 0
           }
         },
-        { $sort: { startDate: sort } },
+        { $sort: { startDate: sort as any } },
         { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
         { $limit: Number(pageSize) }
       ])
@@ -255,7 +277,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
 })
 
 // 管理端 取得提案內容 GET /admin/projects/{projectId}
-router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, res) => {
+router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, res, next) => {
   /**
    * #swagger.tags = ['Admin - 管理端']
    * #swagger.description = '取得提案內容'
@@ -268,7 +290,37 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
       "status": "success",
       "message": "取得提案資料成功",
       "results": {
-          "projects": "...data"
+        "_id": "66401d4618d9a03d581946fc",
+        "introduce": "大家好，我們是廣福國小六年級資優班的學生，我們希望能透過自己的能力及創意籌得資優班畢旅的資金。 老師教導我們要成為懂得幫助他人的人，所以在每次籌辦活動後我們都會做一件幫助他人的事情！",
+        "teamName": "愛在西元前",
+        "email": "elsa@gamil.com",
+        "phone": "0955123123",
+        "title": "六優畢旅自籌計畫—【一趟讓國小資優生實踐自主公益計畫的畢業旅行】",
+        "categoryKey": 1,
+        "targetMoney": 100000,
+        "startDate": 1714534369,
+        "endDate": 1715439897,
+        "describe": "一輩子只有一次的國小資優生畢業旅行",
+        "coverUrl": "https://picsum.photos/id/65/200/300",
+        "content": "<p>在資優班情意課課程時，老師剛好上到我們如何「同理他人」，我們想到普通班會去一次畢旅，爸爸媽媽就要負擔4張小朋友左右的費用，如果資優班的畢旅可以靠我們自己的能力籌得經費，那不但可以替爸爸媽媽省錢，也能在過程中學習如何籌畫好一個計劃。<br><br>於是計畫就這麼開始了！<br><br>在大家有共識決定自籌畢旅，在腦力激盪階段，我們把從四年級到現在在資優班學習到的概念拿來推敲一番，四年級情意課學習「事情的一體兩面」、五年級特色課程從「能源議題」出發，結合SDGs聯合國永續發展目標我們學習到能源從哪裡來、省電的重要、什麼是碳排放以及永續的重要性，並執行了「檢視自己一週食衣住行育樂碳排放量」的活動，從中我們學會了關注生活及環保觀念。</p>",
+        "videoUrl": "https://youtu.be/Iy69ifIf7jc?si=rX3_ZAdEhvgsUbu5",
+        "relatedUrl": "www.google.com",
+        "feedbackItem": "學生書寫的電子感謝函",
+        "feedbackUrl": "",
+        "feedbackMoney": 5000,
+        "feedbackDate": 1718118294,
+        "reviewLog": [
+          {
+            "_id": "663e4c59d8b15d4452a72a63",
+            "content": "待審核",
+            "status": 0,
+            "timestamp": 1715358809
+          }
+        ],
+        "state": {
+          "state": 2,
+          "content": "已結束"
+        }
       }
     }
   }
@@ -283,6 +335,18 @@ router.get('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, r
         message: '錯誤的提案編號格式'
       })
     }
+
+    // 先檢查提案是否有審核紀錄，若沒有任何審核與送審紀錄則先補建一筆
+    const countProjectCheck = await CheckModel.countDocuments({ projectId })
+    if (!countProjectCheck) {
+      await createCheck({
+        projectId: projectId as any,
+        content: '',
+        status: 0,
+        next
+      })
+    }
+
     const projectData = await ProjectModel.aggregate([
       {
         $match: { _id: new Types.ObjectId(projectId) }
