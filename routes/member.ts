@@ -204,7 +204,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
        }]
     * #swagger.parameters['state'] = {
       in: 'query',
-      description: '提案狀態 （N = 0:送審 1:[預設]核准 -1:否准 2:已結束 3:全部）',
+      description: '提案狀態 （N = 0:送審 1:[預設]核准 -1:否准 2:已結束）',
       type: 'number',
       default: '1'
     }
@@ -226,41 +226,27 @@ router.get('/projects', authMiddleware, async (req, res) => {
         schema: {
           "status": "success",
           "message": "取得我的提案列表成功",
-          "results": [
-            {
-              "_id": "6654455a70970a49de414b45",
-              "title": "支持烏野再次踏上東京橘色球場",
-              "categoryKey": 1,
-              "targetMoney": 100000,
-              "startDate": 1715792000,
-              "endDate": 1732384000,
-              "coverUrl": "https://i.imgur.com/UqUdehL.png",
-              "state": 1,
-              "sponsorLog": [
-                {
-                  "_id": "6655989c0f1412fbcf6342a8",
-                  "userId": "66557c99fe4eac8981c4f746",
-                  "projectId": "6654455a70970a49de414b45",
-                  "money": 1000,
-                  "userName": "YC",
-                  "phone": "0987654321",
-                  "receiver": "YCYC",
-                  "receiverPhone": "0987654321",
-                  "address": "YC家",
-                  "isNeedFeedback": true,
-                  "createTime": 1720000000,
-                  "updateTime": 1720000000
-                }
-              ],
-              "sponsorCount": 0
-            }
-          ],
-          "eachStateCount": {
-            "ongoing": 3,
-            "pending": 2,
-            "rejected": 1,
-            "ended": 0
+          "results": {
+            "eachStateCount": {
+              "ongoing": 3,
+              "pending": 2,
+              "rejected": 1,
+              "ended": 0
+            },
+            "list": [
+              {
+                "title": "支持烏野再次踏上東京橘色球場",
+                "categoryKey": 1,
+                "targetMoney": 100000,
+                "achievedMoney":4000,
+                "startDate": 1715792000,
+                "endDate": 1732384000,
+                "coverUrl": "https://i.imgur.com/UqUdehL.png",
+                "sponsorCount": 4
+              }
+            ]
           },
+
           "pagination": {
             "pageNo": 1,
             "pageSize": 10,
@@ -307,7 +293,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
     }
 
     if (errorMsg.length === 0) {
-      const list = await Project.aggregate([
+      const allProjects = await Project.aggregate([
         {
           $match: { userId: new Types.ObjectId(userId) }
         },
@@ -376,10 +362,11 @@ router.get('/projects', authMiddleware, async (req, res) => {
       ])
 
       const eachStateCount = {
-        ongoing: list.filter((obj) => Number(obj.state) === 1).length,
-        pending: list.filter((obj) => Number(obj.state) === 0).length,
-        rejected: list.filter((obj) => Number(obj.state) === -1).length,
-        ended: list.filter((obj) => Number(obj.state) === 2).length
+        ongoing:allProjects.filter((obj)=> obj.state==1).length,
+        pending:allProjects.filter((obj)=> obj.state==0).length,
+        rejected:allProjects.filter((obj)=> obj.state==-1).length,
+        ended:allProjects.filter((obj)=> obj.state==2).length
+
       }
       let totalProjects = 0
       switch (Number(state)) {
@@ -400,7 +387,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
       const totalPage = Math.ceil(totalProjects / Number(pageSize))
       const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
 
-      const results = await Project.aggregate([
+      const list = await Project.aggregate([
         {
           $match: { userId: new Types.ObjectId(userId) }
         },
@@ -504,7 +491,15 @@ router.get('/projects', authMiddleware, async (req, res) => {
         },
         {
           $addFields: {
-            sponsorCount: { $size: '$sponsorLog' }
+            achievedMoney: { $sum: "$sponsorLog.money" },
+            sponsorCount:{ $size: '$sponsorLog'}
+            }
+        },
+        {
+          $project: {
+            sponsorLog: 0,
+            _id: 0,
+            state:0
           }
         }
       ])
@@ -512,8 +507,10 @@ router.get('/projects', authMiddleware, async (req, res) => {
       return res.status(200).json({
         status: 'success',
         message: totalProjects ? '提案列表取得成功' : '找不到相符條件的資料',
-        results,
-        eachStateCount,
+        results: {
+          eachStateCount,
+          list
+        },
         pagination: {
           pageNo: Number(safePageNo),
           pageSize: Number(pageSize),
