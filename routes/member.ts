@@ -362,11 +362,13 @@ router.get('/projects', authMiddleware, async (req, res) => {
       ])
 
       const eachStateCount = {
-        ongoing:allProjects.filter((obj)=> obj.state==1).length,
-        pending:allProjects.filter((obj)=> obj.state==0).length,
+        ongoing:allProjects.filter((obj)=> obj.state==1 && obj.endDate >= Date.now()/1000).length,
         rejected:allProjects.filter((obj)=> obj.state==-1).length,
-        ended:allProjects.filter((obj)=> obj.state==2).length
-
+        pending:allProjects.filter((obj)=> obj.state==0).length,
+        ended:allProjects.filter((obj)=> obj.state==1 && obj.endDate < Date.now()/1000).length,
+        // total: allProjects.length,
+        // allProjects,
+        // now: Date.now()/1000
       }
       let totalProjects = 0
       switch (Number(state)) {
@@ -386,6 +388,24 @@ router.get('/projects', authMiddleware, async (req, res) => {
 
       const totalPage = Math.ceil(totalProjects / Number(pageSize))
       const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
+
+      // 
+      // 提案狀態查詢邏輯
+      let stateFilter = {}
+      switch (Number(state)) {
+        case 0:
+          stateFilter = { 'latestCheck.status': 0 }
+          break
+        case 1:
+          stateFilter = { 'latestCheck.status': 1, endDate: { $gte: Date.now() / 1000 } }
+          break
+        case -1:
+          stateFilter = { 'latestCheck.status': -1 }
+          break
+        case 2:
+          stateFilter = { 'latestCheck.status': 1, endDate: { $lt: Date.now() / 1000 } }
+          break
+      }
 
       const list = await Project.aggregate([
         {
@@ -434,7 +454,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
         { $unwind: '$state' },
         {
           $project: {
-            latestCheck: 0,
+            // latestCheck: 0,
             reviewLog: 0,
             userId: 0,
             introduce: 0,
@@ -453,11 +473,8 @@ router.get('/projects', authMiddleware, async (req, res) => {
             updateTime: 0
           }
         },
-        {
-          $match: {
-            state: Number(state)
-          }
-        },
+        
+        { $match: stateFilter },
         { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
         { $limit: Number(pageSize) },
         {
@@ -499,7 +516,8 @@ router.get('/projects', authMiddleware, async (req, res) => {
           $project: {
             sponsorLog: 0,
             _id: 0,
-            state:0
+            state:0,
+            latestCheck: 0,
           }
         }
       ])
@@ -515,7 +533,6 @@ router.get('/projects', authMiddleware, async (req, res) => {
           pageNo: Number(safePageNo),
           pageSize: Number(pageSize),
           count: totalProjects,
-          state
         }
       })
     } else {
