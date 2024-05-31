@@ -235,6 +235,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
             },
             "list": [
               {
+                "id":"66401d4618d9a03d5819470a",
                 "title": "支持烏野再次踏上東京橘色球場",
                 "categoryKey": 1,
                 "targetMoney": 100000,
@@ -250,8 +251,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
           "pagination": {
             "pageNo": 1,
             "pageSize": 10,
-            "count": 3,
-            "state": "1"
+            "count": 3
           }
         }
       }
@@ -508,16 +508,17 @@ router.get('/projects', authMiddleware, async (req, res) => {
         },
         {
           $addFields: {
+            id: "$_id",
             achievedMoney: { $sum: "$sponsorLog.money" },
-            sponsorCount:{ $size: '$sponsorLog'}
-            }
+            sponsorCount:{ $size: '$sponsorLog'},
+          }
         },
         {
           $project: {
             sponsorLog: 0,
-            _id: 0,
             state:0,
             latestCheck: 0,
+            _id:0
           }
         }
       ])
