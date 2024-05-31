@@ -362,10 +362,10 @@ router.get('/projects', authMiddleware, async (req, res) => {
       ])
 
       const eachStateCount = {
-        ongoing:allProjects.filter((obj)=> obj.state==1 && obj.endDate >= Date.now()/1000).length,
-        rejected:allProjects.filter((obj)=> obj.state==-1).length,
-        pending:allProjects.filter((obj)=> obj.state==0).length,
-        ended:allProjects.filter((obj)=> obj.state==1 && obj.endDate < Date.now()/1000).length,
+        ongoing: allProjects.filter((obj) => obj.state == 1 && obj.endDate >= Date.now() / 1000).length,
+        rejected: allProjects.filter((obj) => obj.state == -1).length,
+        pending: allProjects.filter((obj) => obj.state == 0).length,
+        ended: allProjects.filter((obj) => obj.state == 1 && obj.endDate < Date.now() / 1000).length
         // total: allProjects.length,
         // allProjects,
         // now: Date.now()/1000
@@ -389,7 +389,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
       const totalPage = Math.ceil(totalProjects / Number(pageSize))
       const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
 
-      // 
+      //
       // 提案狀態查詢邏輯
       let stateFilter = {}
       switch (Number(state)) {
@@ -473,7 +473,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
             updateTime: 0
           }
         },
-        
+
         { $match: stateFilter },
         { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
         { $limit: Number(pageSize) },
@@ -516,9 +516,9 @@ router.get('/projects', authMiddleware, async (req, res) => {
         {
           $project: {
             sponsorLog: 0,
-            state:0,
-            latestCheck: 0,
-            _id:0
+            _id: 0,
+            state: 0,
+            latestCheck: 0
           }
         }
       ])
@@ -533,7 +533,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
         pagination: {
           pageNo: Number(safePageNo),
           pageSize: Number(pageSize),
-          count: totalProjects,
+          count: totalProjects
         }
       })
     } else {
@@ -724,18 +724,37 @@ router.get('/collection', authMiddleware, async (req, res) => {
     schema: {
       "status": "success",
       "message": "取得追蹤列表成功",
-      "results": {
-          "projects": "...data"
-        },
+      "results": [{
+        "_id": "66401d4618d9a03d581946fd",
+        "userId": "663a54b8c9225d0f16b55020",
+        "introduce": "災害應變知識應該是公開的，邀請你一起降低公民參與門檻，製作「免費線上手冊」，讓所有人都能隨時取得、自學練習，隨時做好災害應變準備，保護自己與身邊的人。 壯闊台灣聯盟是獨立的非營利組織，工作圍繞著提升國家韌性、社會安全、民主治理與整體競爭力。Take action today - 成為彼此的後盾！",
+        "teamName": "愛在西元前",
+        "email": "elsa@gamil.com",
+        "phone": "0955123123",
+        "title": "壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！",
+        "categoryKey": 1,
+        "targetMoney": 500000,
+        "startDate": 1715439897,
+        "endDate": 1718118294,
+        "describe": "公開災害應變知識，一起自主學習！",
+        "coverUrl": "https://picsum.photos/id/61/200/300",
+        "content": "<p>最近一次地震發生時，你還記得你的反應是什麼嗎？無論自己是當事人或只是旁觀者，上次遇到事故，你第一時間的反應又是什麼？面對無法預期的突發狀況，唯有最好準備，才能保護身邊的人。<br><br>台灣地理與地緣政治環境特殊，我們面臨各種天災與人為的風險，事情發生當下沒有思考的時間，#BePrepared !<br><br>邀請你，支持「壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！」，提供免費線上手冊、讓學習與取用沒有侷限，讓更多人有能力在關鍵時刻伸出援手。</p>",
+        "videoUrl": "https://youtu.be/Iy69ifIf7jc?si=rX3_ZAdEhvgsUbu5",
+        "relatedUrl": "www.google.com",
+        "feedbackItem": "止血帶包",
+        "feedbackUrl": "",
+        "feedbackMoney": 10000,
+        "feedbackDate": 1718118294,
+        "trackingStatus": true
+      }],
       "pagination": {
-          "pageNo": 1,
-          "pageSize": 10,
-          "totalPage": 3,
-          "count": 25,
-          "sortDesc": false,
-          "status": 0,
-          "search": "關鍵字搜尋"
-        }
+        "pageNo": 1,
+        "pageSize": 10,
+        "hasNext": false,
+        "hasPre": false,
+        "totalPage": 1,
+        "count": 1
+      }
     }
   }
   *
@@ -835,8 +854,7 @@ router.get(
         schema: {
           "status": "success",
           "message": "取得未讀通知成功",
-          "results": [
-            {
+          "results": [{
               "id": "664cc9c63171e09ae23b2c9e",
               "content": "「測試修改送審」審核已過審",
               "isRead": true,
@@ -846,8 +864,7 @@ router.get(
                   "title": "測試修改送審",
                   "coverUrl": "https://fakeimg.pl/300/"
               }
-            }
-          ],
+            }],
           "pagination": {
             "count": 2,
             "pageNo": 1,
@@ -930,6 +947,298 @@ router.get(
     })
   })
 )
+// 用戶端 贊助紀錄 GET /member/support
+router.get('/support', authMiddleware, async (req, res) => {
+  /**
+   * #swagger.tags = ['Member - 會員中心']
+   * #swagger.description = '取得贊助紀錄'
+   * #swagger.security = [{
+      token: []
+    }]
+    * #swagger.parameters['pageNo'] = {
+      in: 'query',
+      description: '當前頁數',
+      type: 'number',
+      default: '1'
+    }
+    * #swagger.parameters['pageSize'] = {
+      in: 'query',
+      description: '單頁筆數',
+      type: 'number',
+      default: '10'
+    }
+  * #swagger.responses[200] = {
+    description: '取得贊助紀錄成功',
+    schema: {
+      "status": "success",
+      "message": "取得贊助紀錄成功",
+      "results": [{
+        "_id": "665876fe0200b4355521bd0c",
+        "money": 12000,
+        "isNeedFeedback": true,
+        "receiver": "Hank林",
+        "receiverPhone": "0987987987",
+        "address": "台北市大馬路123號",
+        "createTime": 1716181992,
+        "updateTime": 1716181992,
+        "email": "hank@gmail.com",
+        "categoryKey": 1,
+        "feedBackDate": 1718118294,
+        "project": {
+          "title": "壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！",
+          "feedbackItem": "止血帶包",
+          "categoryKey": 1
+        }
+      }],
+      "pagination": {
+        "pageNo": 1,
+        "pageSize": 10,
+        "hasNext": false,
+        "hasPre": false,
+        "totalPage": 1,
+        "count": 1
+      }
+    }
+  }
+  *
+  */
+
+  try {
+    // 請求參數檢查
+    const errorMsg = []
+    const { id } = (req as any).user
+    const { pageNo = 1, pageSize = 10 } = req.query
+
+    // 當前頁數
+    if (!Number(pageNo) || Number(pageNo) < 1) {
+      errorMsg.push('當前頁數錯誤')
+    }
+
+    // 單頁筆數
+    if (!Number(pageSize) || Number(pageSize) < 1) {
+      errorMsg.push('單頁筆數錯誤')
+    }
+
+    if (errorMsg.length === 0) {
+      const sponsorFilter = { userId: new Types.ObjectId(id) }
+      const totalSponsors = await Sponsor.countDocuments(sponsorFilter)
+      const totalPage = Math.ceil(totalSponsors / Number(pageSize))
+      const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
+
+      const sponsors = await Sponsor.aggregate([
+        { $match: sponsorFilter },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userId'
+          }
+        },
+        {
+          $lookup: {
+            from: 'projects',
+            localField: 'projectId',
+            foreignField: '_id',
+            as: 'projectId'
+          }
+        },
+        { $unwind: '$projectId' },
+        {
+          $addFields: {
+            email: '$userId.email',
+            categoryKey: '$projectId.categoryKey',
+            feedBackDate: '$projectId.feedbackDate',
+            project: {
+              title: '$projectId.title',
+              feedbackItem: '$projectId.feedbackItem',
+              categoryKey: '$projectId.categoryKey'
+            }
+          }
+        },
+        { $unwind: '$email' },
+        { $unwind: '$feedBackDate' },
+        {
+          $project: {
+            userId: 0,
+            userName: 0,
+            projectId: 0,
+            phone: 0
+          }
+        },
+        { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
+        { $limit: Number(pageSize) }
+      ])
+
+      return res.status(200).json({
+        status: 'success',
+        message: totalSponsors ? '取得贊助紀錄成功' : '還沒有贊助的提案',
+        results: sponsors,
+        pagination: {
+          pageNo: Number(safePageNo),
+          pageSize: Number(pageSize),
+          hasNext: Number(safePageNo) < totalPage,
+          hasPre: Number(safePageNo) > 1,
+          totalPage,
+          count: totalSponsors
+        }
+      })
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: `發生錯誤 ${errorMsg.join()}`
+      })
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: '伺服器錯誤' + error
+    })
+  }
+})
+
+// 用戶端 贊助名單 GET /member/support/{projectId}
+router.get('/support/:projectId', authMiddleware, async (req, res) => {
+  /**
+   * #swagger.tags = ['Member - 會員中心']
+   * #swagger.description = '取得贊助名單'
+   * #swagger.security = [{
+      token: []
+    }]
+    * #swagger.parameters['pageNo'] = {
+      in: 'query',
+      description: '當前頁數',
+      type: 'number',
+      default: '1'
+    }
+    * #swagger.parameters['pageSize'] = {
+      in: 'query',
+      description: '單頁筆數',
+      type: 'number',
+      default: '10'
+    }
+  * #swagger.responses[200] = {
+    description: '取得贊助名單成功',
+    schema: {
+      "status": "success",
+      "message":"取得贊助名單成功",
+      "results": [{
+        "_id": "665876fe0200b4355521bd0c",
+        "money": 12000,
+        "isNeedFeedback": true,
+        "receiver": "Hank林",
+        "receiverPhone": "0987987987",
+        "address": "台北市大馬路123號",
+        "createTime": 1716181992,
+        "updateTime": 1716181992,
+        "email": "hank@gmail.com",
+        "feedbackMoney": 10000
+      }],
+      "pagination": {
+          "pageNo": 1,
+          "pageSize": 10,
+          "hasNext": false,
+          "hasPre": false,
+          "totalPage": 1,
+          "count": 1
+        }
+    }
+  }
+  *
+  */
+
+  try {
+    // 請求參數檢查
+    const errorMsg = []
+    const { pageNo = 1, pageSize = 10 } = req.query
+    const projectId = req.params.projectId || 'empty'
+    if (!Types.ObjectId.isValid(String(projectId))) {
+      return res.status(400).json({
+        status: 'error',
+        message: '錯誤的提案編號格式'
+      })
+    }
+
+    // 當前頁數
+    if (!Number(pageNo) || Number(pageNo) < 1) {
+      errorMsg.push('當前頁數錯誤')
+    }
+
+    // 單頁筆數
+    if (!Number(pageSize) || Number(pageSize) < 1) {
+      errorMsg.push('單頁筆數錯誤')
+    }
+
+    if (errorMsg.length === 0) {
+      const sponsorFilter = { projectId: new Types.ObjectId(projectId) }
+      const totalSponsors = await Sponsor.countDocuments(sponsorFilter)
+      const totalPage = Math.ceil(totalSponsors / Number(pageSize))
+      const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
+
+      const sponsor = await Sponsor.aggregate([
+        { $match: sponsorFilter },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userId'
+          }
+        },
+        {
+          $lookup: {
+            from: 'projects',
+            localField: 'projectId',
+            foreignField: '_id',
+            as: 'projectId'
+          }
+        },
+        { $unwind: '$projectId' },
+        {
+          $addFields: {
+            email: '$userId.email',
+            feedbackMoney: '$projectId.feedbackMoney'
+          }
+        },
+        { $unwind: '$email' },
+        {
+          $project: {
+            userId: 0,
+            userName: 0,
+            projectId: 0,
+            phone: 0
+          }
+        },
+        { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
+        { $limit: Number(pageSize) }
+      ])
+
+      return res.status(200).json({
+        status: 'success',
+        message: totalSponsors ? '取得贊助名單成功' : '還沒有贊助的紀錄',
+        results: sponsor,
+        pagination: {
+          pageNo: Number(safePageNo),
+          pageSize: Number(pageSize),
+          hasNext: Number(safePageNo) < totalPage,
+          hasPre: Number(safePageNo) > 1,
+          totalPage,
+          count: totalSponsors
+        }
+      })
+    } else {
+      return res.status(400).json({
+        status: 'error',
+        message: `發生錯誤 ${errorMsg.join()}`
+      })
+    }
+  } catch (error) {
+    return res.status(500).json({
+      status: 'error',
+      message: '伺服器錯誤' + error
+    })
+  }
+})
 
 // 取得未讀通知數量
 router.get(
