@@ -2,11 +2,11 @@
 
 # 封面
 
-![專案封面圖](https://fakeimg.pl/500/)
+![專案封面圖](https://avatars.githubusercontent.com/u/167001950)
 
 > 募資平台的核心理念在於透過眾人的集體力量，在募資平台上支持以人為本，共同建立更美好社會互助
 
-- [線上觀看連結](https://google.com/)
+- [線上觀看連結](https://github.com/orgs/Move-Move-CrowdFunding/repositories)
 
 ## 功能
 
@@ -119,6 +119,7 @@ GMAIL_REFRESH_TOKEN= # Gmail API refresh token
 ## 第三方服務
 
 - 藍新金流
+- Imgur
   ...
 
 ## CI/CD 說明
