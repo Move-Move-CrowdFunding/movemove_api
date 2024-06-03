@@ -1662,13 +1662,6 @@
         "description": "取得提案列表",
         "parameters": [
           {
-            "name": "status",
-            "in": "query",
-            "description": "提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）",
-            "type": "number",
-            "default": "0"
-          },
-          {
             "name": "pageNo",
             "in": "query",
             "description": "當前頁數",
@@ -1685,9 +1678,16 @@
           {
             "name": "sortDesc",
             "in": "query",
-            "description": "提案新舊排序，預設為 false (新->舊)",
+            "description": "提案新舊排序，預設為 true，也可以用 1、-1 參數<br>true、1 為新到舊排序<br>false、-1 為舊到新排序",
             "type": "boolean",
-            "default": "false"
+            "default": "true"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）",
+            "type": "number",
+            "default": "0"
           },
           {
             "name": "search",
@@ -1712,11 +1712,102 @@
                   "example": "取得提案列表"
                 },
                 "results": {
-                  "type": "object",
-                  "properties": {
-                    "projects": {
-                      "type": "string",
-                      "example": "...data"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "6652d5104fd5c3080e3e5795"
+                      },
+                      "introduce": {
+                        "type": "string",
+                        "example": "專業金援團隊，弱勢族群救星，幫助許多需要協助的家庭。"
+                      },
+                      "teamName": {
+                        "type": "string",
+                        "example": "弱勢救星"
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "nomail@mail.com"
+                      },
+                      "phone": {
+                        "type": "string",
+                        "example": "0938938438"
+                      },
+                      "title": {
+                        "type": "string",
+                        "example": "測試送審"
+                      },
+                      "categoryKey": {
+                        "type": "number",
+                        "example": 2
+                      },
+                      "targetMoney": {
+                        "type": "number",
+                        "example": 30000
+                      },
+                      "startDate": {
+                        "type": "number",
+                        "example": 1720713600
+                      },
+                      "endDate": {
+                        "type": "number",
+                        "example": 1721577600
+                      },
+                      "describe": {
+                        "type": "string",
+                        "example": "一場無情的大火吞噬了整個社區，請幫助無家可歸的民眾。"
+                      },
+                      "coverUrl": {
+                        "type": "string",
+                        "example": "https://fakeimg.pl/300/"
+                      },
+                      "content": {
+                        "type": "string",
+                        "example": "<p>test</p>"
+                      },
+                      "videoUrl": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "relatedUrl": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "feedbackItem": {
+                        "type": "string",
+                        "example": "限量精美小熊維尼"
+                      },
+                      "feedbackUrl": {
+                        "type": "string",
+                        "example": "https://fakeimg.pl/300/"
+                      },
+                      "feedbackMoney": {
+                        "type": "number",
+                        "example": 100
+                      },
+                      "feedbackDate": {
+                        "type": "number",
+                        "example": 1721577600
+                      },
+                      "createTime": {
+                        "type": "number",
+                        "example": 1716704528
+                      },
+                      "updateTime": {
+                        "type": "number",
+                        "example": 1716704528
+                      },
+                      "nickName": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "status": {
+                        "type": "number",
+                        "example": 0
+                      }
                     }
                   }
                 },
@@ -1733,15 +1824,15 @@
                     },
                     "totalPage": {
                       "type": "number",
-                      "example": 3
+                      "example": 1
                     },
                     "count": {
                       "type": "number",
-                      "example": 25
+                      "example": 1
                     },
                     "sortDesc": {
                       "type": "boolean",
-                      "example": false
+                      "example": true
                     },
                     "status": {
                       "type": "number",
@@ -1804,9 +1895,118 @@
                 "results": {
                   "type": "object",
                   "properties": {
-                    "projects": {
+                    "_id": {
                       "type": "string",
-                      "example": "...data"
+                      "example": "66401d4618d9a03d581946fc"
+                    },
+                    "introduce": {
+                      "type": "string",
+                      "example": "大家好，我們是廣福國小六年級資優班的學生，我們希望能透過自己的能力及創意籌得資優班畢旅的資金。 老師教導我們要成為懂得幫助他人的人，所以在每次籌辦活動後我們都會做一件幫助他人的事情！"
+                    },
+                    "teamName": {
+                      "type": "string",
+                      "example": "愛在西元前"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "elsa@gamil.com"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "0955123123"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "六優畢旅自籌計畫—【一趟讓國小資優生實踐自主公益計畫的畢業旅行】"
+                    },
+                    "categoryKey": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "targetMoney": {
+                      "type": "number",
+                      "example": 100000
+                    },
+                    "startDate": {
+                      "type": "number",
+                      "example": 1714534369
+                    },
+                    "endDate": {
+                      "type": "number",
+                      "example": 1715439897
+                    },
+                    "describe": {
+                      "type": "string",
+                      "example": "一輩子只有一次的國小資優生畢業旅行"
+                    },
+                    "coverUrl": {
+                      "type": "string",
+                      "example": "https://picsum.photos/id/65/200/300"
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "<p>在資優班情意課課程時，老師剛好上到我們如何「同理他人」，我們想到普通班會去一次畢旅，爸爸媽媽就要負擔4張小朋友左右的費用，如果資優班的畢旅可以靠我們自己的能力籌得經費，那不但可以替爸爸媽媽省錢，也能在過程中學習如何籌畫好一個計劃。<br><br>於是計畫就這麼開始了！<br><br>在大家有共識決定自籌畢旅，在腦力激盪階段，我們把從四年級到現在在資優班學習到的概念拿來推敲一番，四年級情意課學習「事情的一體兩面」、五年級特色課程從「能源議題」出發，結合SDGs聯合國永續發展目標我們學習到能源從哪裡來、省電的重要、什麼是碳排放以及永續的重要性，並執行了「檢視自己一週食衣住行育樂碳排放量」的活動，從中我們學會了關注生活及環保觀念。</p>"
+                    },
+                    "videoUrl": {
+                      "type": "string",
+                      "example": "https://youtu.be/Iy69ifIf7jc?si=rX3_ZAdEhvgsUbu5"
+                    },
+                    "relatedUrl": {
+                      "type": "string",
+                      "example": "www.google.com"
+                    },
+                    "feedbackItem": {
+                      "type": "string",
+                      "example": "學生書寫的電子感謝函"
+                    },
+                    "feedbackUrl": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "feedbackMoney": {
+                      "type": "number",
+                      "example": 5000
+                    },
+                    "feedbackDate": {
+                      "type": "number",
+                      "example": 1718118294
+                    },
+                    "reviewLog": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "663e4c59d8b15d4452a72a63"
+                          },
+                          "content": {
+                            "type": "string",
+                            "example": "待審核"
+                          },
+                          "status": {
+                            "type": "number",
+                            "example": 0
+                          },
+                          "timestamp": {
+                            "type": "number",
+                            "example": 1715358809
+                          }
+                        }
+                      }
+                    },
+                    "state": {
+                      "type": "object",
+                      "properties": {
+                        "state": {
+                          "type": "number",
+                          "example": 2
+                        },
+                        "content": {
+                          "type": "string",
+                          "example": "已結束"
+                        }
+                      }
                     }
                   }
                 }
@@ -2075,7 +2275,7 @@
           {
             "name": "state",
             "in": "query",
-            "description": "提案狀態 （N = 0:送審 1:[預設]核准 -1:否准 2:已結束 3:全部）",
+            "description": "提案狀態 （N = 0:送審 1:[預設]核准 -1:否准 2:已結束）",
             "type": "number",
             "default": "1"
           },
@@ -2109,123 +2309,72 @@
                   "example": "取得我的提案列表成功"
                 },
                 "results": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "_id": {
-                        "type": "string",
-                        "example": "6654455a70970a49de414b45"
-                      },
-                      "title": {
-                        "type": "string",
-                        "example": "支持烏野再次踏上東京橘色球場"
-                      },
-                      "categoryKey": {
-                        "type": "number",
-                        "example": 1
-                      },
-                      "targetMoney": {
-                        "type": "number",
-                        "example": 100000
-                      },
-                      "startDate": {
-                        "type": "number",
-                        "example": 1715792000
-                      },
-                      "endDate": {
-                        "type": "number",
-                        "example": 1732384000
-                      },
-                      "coverUrl": {
-                        "type": "string",
-                        "example": "https://i.imgur.com/UqUdehL.png"
-                      },
-                      "state": {
-                        "type": "number",
-                        "example": 1
-                      },
-                      "sponsorLog": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "_id": {
-                              "type": "string",
-                              "example": "6655989c0f1412fbcf6342a8"
-                            },
-                            "userId": {
-                              "type": "string",
-                              "example": "66557c99fe4eac8981c4f746"
-                            },
-                            "projectId": {
-                              "type": "string",
-                              "example": "6654455a70970a49de414b45"
-                            },
-                            "money": {
-                              "type": "number",
-                              "example": 1000
-                            },
-                            "userName": {
-                              "type": "string",
-                              "example": "YC"
-                            },
-                            "phone": {
-                              "type": "string",
-                              "example": "0987654321"
-                            },
-                            "receiver": {
-                              "type": "string",
-                              "example": "YCYC"
-                            },
-                            "receiverPhone": {
-                              "type": "string",
-                              "example": "0987654321"
-                            },
-                            "address": {
-                              "type": "string",
-                              "example": "YC家"
-                            },
-                            "isNeedFeedback": {
-                              "type": "boolean",
-                              "example": true
-                            },
-                            "createTime": {
-                              "type": "number",
-                              "example": 1720000000
-                            },
-                            "updateTime": {
-                              "type": "number",
-                              "example": 1720000000
-                            }
-                          }
-                        }
-                      },
-                      "sponsorCount": {
-                        "type": "number",
-                        "example": 0
-                      }
-                    }
-                  }
-                },
-                "eachStateCount": {
                   "type": "object",
                   "properties": {
-                    "ongoing": {
-                      "type": "number",
-                      "example": 3
+                    "eachStateCount": {
+                      "type": "object",
+                      "properties": {
+                        "ongoing": {
+                          "type": "number",
+                          "example": 3
+                        },
+                        "pending": {
+                          "type": "number",
+                          "example": 2
+                        },
+                        "rejected": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "ended": {
+                          "type": "number",
+                          "example": 0
+                        }
+                      }
                     },
-                    "pending": {
-                      "type": "number",
-                      "example": 2
-                    },
-                    "rejected": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "ended": {
-                      "type": "number",
-                      "example": 0
+                    "list": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "66401d4618d9a03d5819470a"
+                          },
+                          "title": {
+                            "type": "string",
+                            "example": "支持烏野再次踏上東京橘色球場"
+                          },
+                          "categoryKey": {
+                            "type": "number",
+                            "example": 1
+                          },
+                          "targetMoney": {
+                            "type": "number",
+                            "example": 100000
+                          },
+                          "achievedMoney": {
+                            "type": "number",
+                            "example": 4000
+                          },
+                          "startDate": {
+                            "type": "number",
+                            "example": 1715792000
+                          },
+                          "endDate": {
+                            "type": "number",
+                            "example": 1732384000
+                          },
+                          "coverUrl": {
+                            "type": "string",
+                            "example": "https://i.imgur.com/UqUdehL.png"
+                          },
+                          "sponsorCount": {
+                            "type": "number",
+                            "example": 4
+                          }
+                        }
+                      }
                     }
                   }
                 },
@@ -2243,10 +2392,6 @@
                     "count": {
                       "type": "number",
                       "example": 3
-                    },
-                    "state": {
-                      "type": "string",
-                      "example": "1"
                     }
                   }
                 }
@@ -2458,11 +2603,94 @@
                   "example": "取得追蹤列表成功"
                 },
                 "results": {
-                  "type": "object",
-                  "properties": {
-                    "projects": {
-                      "type": "string",
-                      "example": "...data"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "66401d4618d9a03d581946fd"
+                      },
+                      "userId": {
+                        "type": "string",
+                        "example": "663a54b8c9225d0f16b55020"
+                      },
+                      "introduce": {
+                        "type": "string",
+                        "example": "災害應變知識應該是公開的，邀請你一起降低公民參與門檻，製作「免費線上手冊」，讓所有人都能隨時取得、自學練習，隨時做好災害應變準備，保護自己與身邊的人。 壯闊台灣聯盟是獨立的非營利組織，工作圍繞著提升國家韌性、社會安全、民主治理與整體競爭力。Take action today - 成為彼此的後盾！"
+                      },
+                      "teamName": {
+                        "type": "string",
+                        "example": "愛在西元前"
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "elsa@gamil.com"
+                      },
+                      "phone": {
+                        "type": "string",
+                        "example": "0955123123"
+                      },
+                      "title": {
+                        "type": "string",
+                        "example": "壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！"
+                      },
+                      "categoryKey": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "targetMoney": {
+                        "type": "number",
+                        "example": 500000
+                      },
+                      "startDate": {
+                        "type": "number",
+                        "example": 1715439897
+                      },
+                      "endDate": {
+                        "type": "number",
+                        "example": 1718118294
+                      },
+                      "describe": {
+                        "type": "string",
+                        "example": "公開災害應變知識，一起自主學習！"
+                      },
+                      "coverUrl": {
+                        "type": "string",
+                        "example": "https://picsum.photos/id/61/200/300"
+                      },
+                      "content": {
+                        "type": "string",
+                        "example": "<p>最近一次地震發生時，你還記得你的反應是什麼嗎？無論自己是當事人或只是旁觀者，上次遇到事故，你第一時間的反應又是什麼？面對無法預期的突發狀況，唯有最好準備，才能保護身邊的人。<br><br>台灣地理與地緣政治環境特殊，我們面臨各種天災與人為的風險，事情發生當下沒有思考的時間，#BePrepared !<br><br>邀請你，支持「壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！」，提供免費線上手冊、讓學習與取用沒有侷限，讓更多人有能力在關鍵時刻伸出援手。</p>"
+                      },
+                      "videoUrl": {
+                        "type": "string",
+                        "example": "https://youtu.be/Iy69ifIf7jc?si=rX3_ZAdEhvgsUbu5"
+                      },
+                      "relatedUrl": {
+                        "type": "string",
+                        "example": "www.google.com"
+                      },
+                      "feedbackItem": {
+                        "type": "string",
+                        "example": "止血帶包"
+                      },
+                      "feedbackUrl": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "feedbackMoney": {
+                        "type": "number",
+                        "example": 10000
+                      },
+                      "feedbackDate": {
+                        "type": "number",
+                        "example": 1718118294
+                      },
+                      "trackingStatus": {
+                        "type": "boolean",
+                        "example": true
+                      }
                     }
                   }
                 },
@@ -2477,25 +2705,21 @@
                       "type": "number",
                       "example": 10
                     },
-                    "totalPage": {
-                      "type": "number",
-                      "example": 3
-                    },
-                    "count": {
-                      "type": "number",
-                      "example": 25
-                    },
-                    "sortDesc": {
+                    "hasNext": {
                       "type": "boolean",
                       "example": false
                     },
-                    "status": {
-                      "type": "number",
-                      "example": 0
+                    "hasPre": {
+                      "type": "boolean",
+                      "example": false
                     },
-                    "search": {
-                      "type": "string",
-                      "example": "關鍵字搜尋"
+                    "totalPage": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "count": {
+                      "type": "number",
+                      "example": 1
                     }
                   }
                 }
@@ -2653,6 +2877,299 @@
                 "name": "main"
               }
             }
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/member/support": {
+      "get": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "取得贊助紀錄",
+        "parameters": [
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "當前頁數",
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "單頁筆數",
+            "type": "number",
+            "default": "10"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取得贊助紀錄成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得贊助紀錄成功"
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "665876fe0200b4355521bd0c"
+                      },
+                      "money": {
+                        "type": "number",
+                        "example": 12000
+                      },
+                      "isNeedFeedback": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "receiver": {
+                        "type": "string",
+                        "example": "Hank林"
+                      },
+                      "receiverPhone": {
+                        "type": "string",
+                        "example": "0987987987"
+                      },
+                      "address": {
+                        "type": "string",
+                        "example": "台北市大馬路123號"
+                      },
+                      "createTime": {
+                        "type": "number",
+                        "example": 1716181992
+                      },
+                      "updateTime": {
+                        "type": "number",
+                        "example": 1716181992
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "hank@gmail.com"
+                      },
+                      "categoryKey": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "feedBackDate": {
+                        "type": "number",
+                        "example": 1718118294
+                      },
+                      "project": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "example": "壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！"
+                          },
+                          "feedbackItem": {
+                            "type": "string",
+                            "example": "止血帶包"
+                          },
+                          "categoryKey": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "pageNo": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "hasNext": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "hasPre": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "totalPage": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "count": {
+                      "type": "number",
+                      "example": 1
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/member/support/{projectId}": {
+      "get": {
+        "tags": [
+          "Member - 會員中心"
+        ],
+        "description": "取得贊助名單",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "pageNo",
+            "in": "query",
+            "description": "當前頁數",
+            "type": "number",
+            "default": "1"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "單頁筆數",
+            "type": "number",
+            "default": "10"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "取得贊助名單成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "取得贊助名單成功"
+                },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "665876fe0200b4355521bd0c"
+                      },
+                      "money": {
+                        "type": "number",
+                        "example": 12000
+                      },
+                      "isNeedFeedback": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "receiver": {
+                        "type": "string",
+                        "example": "Hank林"
+                      },
+                      "receiverPhone": {
+                        "type": "string",
+                        "example": "0987987987"
+                      },
+                      "address": {
+                        "type": "string",
+                        "example": "台北市大馬路123號"
+                      },
+                      "createTime": {
+                        "type": "number",
+                        "example": 1716181992
+                      },
+                      "updateTime": {
+                        "type": "number",
+                        "example": 1716181992
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "hank@gmail.com"
+                      },
+                      "feedbackMoney": {
+                        "type": "number",
+                        "example": 10000
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "pageNo": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "pageSize": {
+                      "type": "number",
+                      "example": 10
+                    },
+                    "hasNext": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "hasPre": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "totalPage": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "count": {
+                      "type": "number",
+                      "example": 1
+                    }
+                  }
+                }
+              },
+              "xml": {
+                "name": "main"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         },
         "security": [
