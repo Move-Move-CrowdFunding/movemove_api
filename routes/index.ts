@@ -12,6 +12,7 @@ import moment from 'moment'
 
 interface IndexHome extends projectType {
   // existing properties...
+  id: string
   achievedMoney: number
   percentage: number
   trackingStatus?: boolean
@@ -113,22 +114,25 @@ router.get('/info', parseToken, async function (req, res) {
       $replaceRoot: { newRoot: { $mergeObjects: ['$doc', '$$ROOT'] } }
     },
     {
+      $addFields: {
+        id: '$_id'
+      }
+    },
+    {
       $project: {
         checks: 0,
         doc: 0,
-        sponsors: 0
+        sponsors: 0,
+        _id: 0
       }
     }
   ])
 
-  const projectId = displayData.map((p) => p._id)
-  console.log(projectId)
-  console.log((req as any).payload)
-  const computedProject: IndexHome[] = displayData.map((project) => {
-    if ((req as any).payload) {
-      //
-    }
+  // const projectId = displayData.map((p) => p._id)
+  console.log(displayData)
 
+  const computedProject: IndexHome[] = displayData.map((project) => {
+    console.log(project)
     let percentage = 0
     if ((project.targetMoney ?? 0) > 0) {
       percentage = ((project?.achievedMoney || 0) / (project.targetMoney ?? 0)) * 100
@@ -167,24 +171,24 @@ router.get('/info', parseToken, async function (req, res) {
     const combinedProjects = hotProjects.concat(recommendProjects, successProjects, recommendProjects)
 
     const uniqueProjects = combinedProjects.filter(
-      (project, index, self) => index === self.findIndex((t) => t._id === project._id)
+      (project, index, self) => index === self.findIndex((t) => t.id === project.id)
     )
 
     const tracks = await Track.find(
       {
         userId: payload.id,
-        projectId: { $in: uniqueProjects.map((project) => project._id) }
+        projectId: { $in: uniqueProjects.map((project) => project.id) }
       },
       { projectId: 1 }
     )
     hotProjects.forEach((project, index, array) => {
-      array[index].trackingStatus = !!tracks.find((track) => track.projectId?.toString() === project._id.toString())
+      array[index].trackingStatus = !!tracks.find((track) => track.projectId?.toString() === project.id.toString())
     })
     recommendProjects.forEach((project, index, array) => {
-      array[index].trackingStatus = !!tracks.find((track) => track.projectId?.toString() === project._id.toString())
+      array[index].trackingStatus = !!tracks.find((track) => track.projectId?.toString() === project.id.toString())
     })
     successProjects.forEach((project, index, array) => {
-      array[index].trackingStatus = !!tracks.find((track) => track.projectId?.toString() === project._id.toString())
+      array[index].trackingStatus = !!tracks.find((track) => track.projectId?.toString() === project.id.toString())
     })
   }
 
