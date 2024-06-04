@@ -37,7 +37,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     }
     * #swagger.parameters['state'] = {
       in: 'query',
-      description: '提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）',
+      description: '提案狀態 （N = 0:[預設]送審, 1:核准, -1:否准, 2:已結束, 3:全部）',
       type: 'number',
       default: '0'
     }
@@ -90,7 +90,8 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
             "state": 0,
             "search": "關鍵字搜尋"
           }
-      }
+        }
+      ]
     }
   }
   *
@@ -123,7 +124,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
       errorMsg.push('提案狀態錯誤')
     }
 
-    if (errorMsg.length === 0) {
+    if (!errorMsg.length) {
       // 搜尋與分頁參數
       let filter = {}
       let totalProjects = 0
@@ -131,7 +132,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
       // 提案狀態查詢邏輯
       let stateFilter = {}
       if ([0, 1, -1, 2].includes(Number(state))) {
-        stateFilter = Number(state) === 2 ? { endDate: { $lt: Date.now() / 1000 } } : { 'state.status': state }
+        stateFilter = Number(state) === 2 ? { endDate: { $lt: Date.now() / 1000 } } : { 'state.status': Number(state) }
       }
 
       filter = { title: { $regex: search } }
@@ -468,7 +469,7 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
       errorMsg.push('需要審核說明')
     }
 
-    if (errorMsg.length === 0) {
+    if (!errorMsg.length) {
       // 避免重複審核已有核准紀錄的提案
       const findProjectIsChecked = await CheckModel.countDocuments({ projectId, status: 1 })
       if (findProjectIsChecked > 0) {
