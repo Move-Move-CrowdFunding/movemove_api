@@ -987,6 +987,7 @@ router.get('/support', authMiddleware, async (req, res) => {
         "categoryKey": 1,
         "feedBackDate": 1718118294,
         "project": {
+          "_id": "66403c34b00d1fe281742a62",
           "title": "壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！",
           "feedbackItem": "止血帶包",
           "categoryKey": 1
@@ -1052,6 +1053,7 @@ router.get('/support', authMiddleware, async (req, res) => {
             categoryKey: '$projectId.categoryKey',
             feedBackDate: '$projectId.feedbackDate',
             project: {
+              _id: '$projectId._id',
               title: '$projectId.title',
               feedbackItem: '$projectId.feedbackItem',
               categoryKey: '$projectId.categoryKey'

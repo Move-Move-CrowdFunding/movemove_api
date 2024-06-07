@@ -116,7 +116,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     if (![1, -1, 'true', 'false'].includes(sortDesc as any)) {
       errorMsg.push('提案新舊排序錯誤')
     } else {
-      sort = [-1, 'false'].includes(sortDesc as any) ? -1 : 1
+      sort = [-1, 'false'].includes(sortDesc as any) ? 1 : -1
     }
 
     // 提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）
@@ -477,33 +477,33 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
           status: 'error',
           message: '該筆提案已有核准紀錄'
         })
-      }
-
-      await createCheck({
-        projectId: projectId as any,
-        content,
-        status: approve,
-        next
-      })
-
-      const notification = await autoNotification({
-        userId,
-        projectId: new Types.ObjectId(projectId),
-        content: '審核通知「<projectName>」',
-        next
-      })
-
-      if (!notification) {
-        return res.status(400).json({
-          status: 'error',
-          message: '建立通知時發生錯誤'
+      } else {
+        await createCheck({
+          projectId: projectId as any,
+          content,
+          status: approve,
+          next
         })
-      }
 
-      return res.status(200).json({
-        status: 'success',
-        message: '審核提案資料成功'
-      })
+        const notification = await autoNotification({
+          userId,
+          projectId: new Types.ObjectId(projectId),
+          content: '審核通知「<projectName>」',
+          next
+        })
+
+        if (!notification) {
+          return res.status(400).json({
+            status: 'error',
+            message: '建立通知時發生錯誤'
+          })
+        } else {
+          return res.status(200).json({
+            status: 'success',
+            message: '審核提案資料成功'
+          })
+        }
+      }
     } else {
       return res.status(400).json({
         status: 'error',
