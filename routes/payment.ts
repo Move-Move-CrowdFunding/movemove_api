@@ -81,7 +81,7 @@ router.post(
 
     const requiredError: string[] = requiredRules({
       req,
-      params: ['projectId', 'money', 'userName', 'phone', 'isNeedFeedback'],
+      params: ['projectId', 'money', 'userName', 'phone'],
       messageArea: 'payment'
     })
     if (requiredError.length) {
@@ -125,7 +125,7 @@ router.post(
       receiver,
       receiverPhone,
       address,
-      isNeedFeedback,
+      isNeedFeedback: !!isNeedFeedback,
       MerchantOrderNo: String(Date.now()),
       TimeStamp: Math.ceil(Date.now() / 1000)
     }
