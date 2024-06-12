@@ -274,6 +274,7 @@ router.get(
             "feedbackDate": 1721577600,
             "targetMoney": 30000,
             "teamName": "弱勢救星",
+            "avatar": "",
             "phone": "0938938438",
             "email": "nomail@mail.com",
             "relatedUrl": "",
@@ -341,6 +342,8 @@ router.get(
       )
     }
     const [passProject] = data
+    const projectUser = await User.findById(passProject.userId)
+
     responseSuccess.success({
       res,
       body: {
@@ -361,6 +364,7 @@ router.get(
           feedbackDate: passProject.feedbackDate,
           targetMoney: passProject.targetMoney,
           teamName: passProject.teamName,
+          avatar: projectUser!.avatar,
           phone: passProject.phone,
           email: passProject.email,
           relatedUrl: passProject.relatedUrl,
