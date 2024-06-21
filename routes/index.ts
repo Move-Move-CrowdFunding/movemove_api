@@ -20,6 +20,81 @@ interface IndexHome extends projectType {
 
 const router = express.Router()
 
+async function getProjectData(matchCondition = {}) {
+  return await Project.aggregate([
+    {
+      $match: matchCondition
+    },
+    {
+      $lookup: {
+        from: 'checks',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'checks'
+      }
+    },
+    {
+      $match: { 'checks.status': 1 }
+    },
+    {
+      $lookup: {
+        from: 'sponsors',
+        localField: '_id',
+        foreignField: 'projectId',
+        as: 'sponsors'
+      }
+    },
+    {
+      $addFields: {
+        sponsors: {
+          $ifNull: ['$sponsors', [{ money: 0 }]]
+        }
+      }
+    },
+    {
+      $unwind: {
+        path: '$sponsors',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $group: {
+        _id: '$_id',
+        achievedMoney: { $sum: '$sponsors.money' },
+        // Keep all the fields from Project
+        doc: { $first: '$$ROOT' }
+      }
+    },
+    {
+      $replaceRoot: { newRoot: { $mergeObjects: ['$doc', '$$ROOT'] } }
+    },
+    {
+      $addFields: {
+        id: '$_id'
+      }
+    },
+    {
+      $project: {
+        checks: 0,
+        doc: 0,
+        sponsors: 0,
+        _id: 0
+      }
+    }
+  ])
+}
+
+function computePercentage(project: IndexHome) {
+  let percentage = 0
+  if ((project.targetMoney ?? 0) > 0) {
+    percentage = ((project?.achievedMoney || 0) / (project.targetMoney ?? 0)) * 100
+  }
+  return {
+    ...project,
+    percentage
+  }
+}
+
 /* GET home page. */
 router.get('/info', parseToken, async function (req, res) {
   /**
@@ -73,81 +148,21 @@ router.get('/info', parseToken, async function (req, res) {
 
   const now = moment().unix()
 
-  const displayData = await Project.aggregate([
-    {
-      $match: {
-        startDate: { $lt: now },
-        endDate: { $gt: now }
-      }
-    },
-    {
-      $lookup: {
-        from: 'checks',
-        localField: '_id',
-        foreignField: 'projectId',
-        as: 'checks'
-      }
-    },
-    {
-      $match: { 'checks.status': 1 }
-    },
-    {
-      $lookup: {
-        from: 'sponsors',
-        localField: '_id',
-        foreignField: 'projectId',
-        as: 'sponsors'
-      }
-    },
-    {
-      $unwind: '$sponsors'
-    },
-    {
-      $group: {
-        _id: '$_id',
-        achievedMoney: { $sum: '$sponsors.money' },
-        // Keep all the fields from Project
-        doc: { $first: '$$ROOT' }
-      }
-    },
-    {
-      $replaceRoot: { newRoot: { $mergeObjects: ['$doc', '$$ROOT'] } }
-    },
-    {
-      $addFields: {
-        id: '$_id'
-      }
-    },
-    {
-      $project: {
-        checks: 0,
-        doc: 0,
-        sponsors: 0,
-        _id: 0
-      }
-    }
-  ])
-
-  // const projectId = displayData.map((p) => p._id)
-  console.log(displayData)
-
-  const computedProject: IndexHome[] = displayData.map((project) => {
-    console.log(project)
-    let percentage = 0
-    if ((project.targetMoney ?? 0) > 0) {
-      percentage = ((project?.achievedMoney || 0) / (project.targetMoney ?? 0)) * 100
-    }
-    return {
-      ...project,
-      percentage
-    }
+  const displayData = await getProjectData({
+    startDate: { $lt: now },
+    endDate: { $gt: now }
   })
+
+  const computedProject: IndexHome[] = displayData.map(computePercentage)
+
+  const displaySuccessData = await getProjectData()
+  const computedSuccessProject: IndexHome[] = displaySuccessData.map(computePercentage)
 
   const hotProjects = computedProject.sort((a, b) => b.percentage - a.percentage).slice(0, 10)
   const recommendProjects = computedProject.sort((a, b) => b.startDate - a.startDate).slice(0, 6)
 
   const successProjects = getRandomSubarray(
-    computedProject.filter((project) => project.achievedMoney >= project.targetMoney),
+    computedSuccessProject.filter((project) => project.achievedMoney >= project.targetMoney),
     4
   )
 
