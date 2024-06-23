@@ -138,7 +138,8 @@ router.get(
     // 分頁篩選參數
     const option: paginationOption = {
       filter: {
-        title: new RegExp(String(keyword), 'g')
+        title: new RegExp(String(keyword), 'g'),
+        startDate: { $lte: Math.ceil(Date.now() / 1000) }
       },
       sort: {
         startDate: Number(sort) === 1 ? -1 : 1
@@ -298,7 +299,8 @@ router.get(
     const data = await Project.aggregate([
       {
         $match: {
-          _id: new Types.ObjectId(req.params.id)
+          _id: new Types.ObjectId(req.params.id),
+          startDate: { $lte: Math.ceil(Date.now() / 1000) }
         }
       },
       {
