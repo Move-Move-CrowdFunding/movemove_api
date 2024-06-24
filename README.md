@@ -17,7 +17,6 @@
 密碼： user1234
 ```
 
-
 ## 安裝
 
 > 請務必依據你的專案來調整內容。
@@ -129,4 +128,10 @@ GMAIL_REFRESH_TOKEN= # Gmail API refresh token
 - [圈圈](https://github.com/panduola666)
 - [羽](https://github.com/linglingsyu)
 - [Hank](https://github.com/tw1720)
-  ...
+- [YC](https://github.com/yichienlu)
+- [Ken](https://github.com/kenlee100)
+
+教練：
+
+* 鉛筆
+* Alpha
