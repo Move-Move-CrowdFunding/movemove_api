@@ -113,7 +113,39 @@ function connectSocketIO(server: any) {
       } catch (err) {
         return socket.emit('error', {
           status: 'error',
-          msg: '服務器錯誤'
+          msg: '伺服器錯誤'
+        })
+      }
+    })
+
+    socket.on('getUnRead', async () => {
+      const token = socket.handshake.auth.token
+
+      if (!token) {
+        return socket.emit('error', {
+          status: 'error',
+          msg: '尚未登入'
+        })
+      }
+
+      try {
+        const decoded: any = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
+        const unReadCount = await Notification.find({
+          userId: decoded.id,
+          isRead: false
+        }).countDocuments()
+
+        socket.emit('unRead', {
+          status: 'success',
+          message: '取得未讀通知成功',
+          results: {
+            count: unReadCount
+          }
+        })
+      } catch (error) {
+        return socket.emit('error', {
+          status: 'error',
+          msg: '伺服器錯誤'
         })
       }
     })
