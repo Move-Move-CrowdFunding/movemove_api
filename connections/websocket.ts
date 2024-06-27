@@ -4,8 +4,8 @@ import { Types } from 'mongoose'
 import Notification from '../models/Notification'
 
 function connectSocketIO(server: any) {
-  // 初始化 server
   const io = new Server(server)
+  // 初始化 server
 
   io.on('connection', (socket) => {
     const token = socket.handshake.auth.token
@@ -152,4 +152,7 @@ async function getUnRead(socket: any) {
   }
 }
 
-export default connectSocketIO
+export default {
+  connectSocketIO,
+  io
+}

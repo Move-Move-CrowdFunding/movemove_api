@@ -7,7 +7,7 @@
 import app from '../app'
 import debug from 'debug' // ('movemove-api:server');
 import http from 'http'
-import connectSocketIO from '../connections/websocket'
+import WS from '../connections/websocket'
 
 /**
  * Get port from environment and store in Express.
@@ -21,7 +21,7 @@ app.set('port', port)
  */
 
 const server = http.createServer(app)
-connectSocketIO(server)
+WS.connectSocketIO(server)
 
 /**
  * Listen on provided port, on all network interfaces.
