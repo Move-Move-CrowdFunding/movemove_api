@@ -4,6 +4,7 @@ import { Types } from 'mongoose'
 import globalError from '../service/globalError'
 import Project from '../models/Project'
 import projectType from '../interface/project'
+import WS from '../connections/websocket'
 
 /**
  * @param {Types.ObjectId} userId 用戶 id
@@ -22,19 +23,27 @@ import projectType from '../interface/project'
     if (!notification._id) return
  */
 const autoNotification = async ({
+  req,
   userId,
   projectId,
   content,
+  status,
   next
 }: {
+  req: any
   userId: Types.ObjectId
   projectId: Types.ObjectId
   content: string
+  status: number
   next: NextFunction
 }) => {
+  if (!String(userId)) {
+    return next(globalError({ errMessage: '尚未登入' }))
+  }
+
   let finalContent = content
 
-  if (!content.trim()) {
+  if (Number(status) !== 1 && !content.trim()) {
     return next(globalError({ errMessage: '請輸入通知內容' }))
   }
 
@@ -47,11 +56,13 @@ const autoNotification = async ({
     }
   }
 
-  return await Notification.create({
+  const data = await Notification.create({
     userId,
     projectId,
     content: finalContent.trim()
   })
+  WS.getUnRead(req.app.io, String(userId))
+  return data
 }
 
 export default autoNotification

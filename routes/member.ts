@@ -7,6 +7,7 @@ import catchAll from '../service/catchAll'
 import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
 import pagination from '../utils/pagination'
+import WS from '../connections/websocket'
 
 import authMiddleware from '../middleware/authMiddleware'
 
@@ -875,7 +876,6 @@ router.get(
             "hasNext": false,
             "totalPage": 1
           },
-          "unReadCount": 0
         }
       }
       * #swagger.responses[401] = {
@@ -921,10 +921,7 @@ router.get(
       { $set: { isRead: true } }
     )
 
-    const unReadCount = await Notification.find({
-      userId: req!.user.id,
-      isRead: false
-    }).countDocuments()
+    WS.getUnRead(req.app.io)
 
     const results = pageData.results.map((item: any) => ({
       id: item._id,
@@ -943,8 +940,7 @@ router.get(
       body: {
         message: '取得最新通知成功',
         ...pageData,
-        results,
-        unReadCount
+        results
       }
     })
   })

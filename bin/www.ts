@@ -21,7 +21,7 @@ app.set('port', port)
  */
 
 const server = http.createServer(app)
-WS.connectSocketIO(server)
+WS.connectSocketIO(server, app)
 
 /**
  * Listen on provided port, on all network interfaces.
