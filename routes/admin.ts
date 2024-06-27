@@ -486,9 +486,11 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
         })
 
         const notification = await autoNotification({
+          req,
           userId,
           projectId: new Types.ObjectId(projectId),
           content: '審核通知「<projectName>」',
+          status: approve,
           next
         })
 
