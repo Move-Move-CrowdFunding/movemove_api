@@ -85,10 +85,7 @@ function connectSocketIO(server: any) {
             { $set: { isRead: true } }
           )
 
-          const unReadCount = await Notification.find({
-            userId: decoded.id,
-            isRead: false
-          }).countDocuments()
+          await getUnRead(socket)
 
           const results = data.results.map((item: any) => ({
             id: item._id,
@@ -106,11 +103,12 @@ function connectSocketIO(server: any) {
             status: 'success',
             message: '取得最新通知成功',
             ...data,
-            results,
-            unReadCount
+            results
           })
         }
       } catch (err) {
+        await getUnRead(socket)
+
         return socket.emit('error', {
           status: 'error',
           msg: '伺服器錯誤'
@@ -118,38 +116,40 @@ function connectSocketIO(server: any) {
       }
     })
 
-    socket.on('getUnRead', async () => {
-      const token = socket.handshake.auth.token
-
-      if (!token) {
-        return socket.emit('error', {
-          status: 'error',
-          msg: '尚未登入'
-        })
-      }
-
-      try {
-        const decoded: any = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
-        const unReadCount = await Notification.find({
-          userId: decoded.id,
-          isRead: false
-        }).countDocuments()
-
-        socket.emit('unRead', {
-          status: 'success',
-          message: '取得未讀通知成功',
-          results: {
-            count: unReadCount
-          }
-        })
-      } catch (error) {
-        return socket.emit('error', {
-          status: 'error',
-          msg: '伺服器錯誤'
-        })
-      }
-    })
+    socket.on('getUnRead', async () => await getUnRead(socket))
   })
+}
+
+async function getUnRead(socket: any) {
+  const token = socket.handshake.auth.token
+
+  if (!token) {
+    return socket.emit('error', {
+      status: 'error',
+      msg: '尚未登入'
+    })
+  }
+
+  try {
+    const decoded: any = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
+    const unReadCount = await Notification.find({
+      userId: decoded.id,
+      isRead: false
+    }).countDocuments()
+
+    socket.emit('unRead', {
+      status: 'success',
+      message: '取得未讀通知成功',
+      results: {
+        count: unReadCount
+      }
+    })
+  } catch (error) {
+    return socket.emit('error', {
+      status: 'error',
+      msg: '伺服器錯誤'
+    })
+  }
 }
 
 export default connectSocketIO
