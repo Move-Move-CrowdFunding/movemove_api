@@ -743,7 +743,7 @@ router.patch(
     }
     // 日期驗證
     const startTimer = String(startDate).padEnd(13, '0')
-    const endTimer = String(endDate).padEnd(13, '0')
+    let endTimer = String(endDate).padEnd(13, '0')
     const feedbackTimer = String(feedbackDate).padEnd(13, '0')
 
     if (!earlyEnd) {
@@ -775,6 +775,9 @@ router.patch(
         )
       }
     }
+    if (earlyEnd && !moment(Number(endTimer)).isSame(moment(), 'days')) {
+      endTimer = String(Date.now())
+    }
 
     await Project.findByIdAndUpdate(projectId, {
       userId: (req as tokenInfo).user.id,
@@ -798,28 +801,36 @@ router.patch(
       feedbackDate
     })
 
-    const checkData = await createCheck({
-      projectId: projectData._id,
-      content: '',
-      status: 0,
-      next
-    })
+    if (earlyEnd) {
+      responseSuccess.success({
+        res,
+        body: {
+          message: '已結束該提案'
+        }
+      })
+    } else {
+      const checkData = await createCheck({
+        projectId: projectData._id,
+        content: '',
+        status: 0,
+        next
+      })
 
-    if (!checkData) {
-      return next(
-        globalError({
-          httpStatus: 400,
-          errMessage: '修改提案失敗'
-        })
-      )
-    }
-
-    responseSuccess.success({
-      res,
-      body: {
-        message: '修改提案成功'
+      if (!checkData) {
+        return next(
+          globalError({
+            httpStatus: 400,
+            errMessage: '修改提案失敗'
+          })
+        )
       }
-    })
+      responseSuccess.success({
+        res,
+        body: {
+          message: '修改提案成功'
+        }
+      })
+    }
   })
 )
 
