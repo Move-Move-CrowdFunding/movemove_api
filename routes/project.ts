@@ -746,31 +746,34 @@ router.patch(
     const endTimer = String(endDate).padEnd(13, '0')
     const feedbackTimer = String(feedbackDate).padEnd(13, '0')
 
-    if (moment(Number(endTimer)).isBefore(moment(Number(startTimer)))) {
-      return next(
-        globalError({
-          errMessage: '結束時間不可小於開始時間'
-        })
-      )
-    }
+    if (!earlyEnd) {
+      if (moment(Number(endTimer)).isBefore(moment(Number(startTimer)))) {
+        return next(
+          globalError({
+            errMessage: '結束時間不可小於開始時間'
+          })
+        )
+      }
 
-    if (
-      moment(Number(startTimer)).isBefore(moment(), 'days') ||
-      moment(Number(endTimer)).isBefore(moment(), 'days') ||
-      moment(Number(feedbackTimer)).isBefore(moment(), 'days')
-    ) {
-      return next(
-        globalError({
-          errMessage: '日期不可小於今日'
-        })
-      )
-    }
-    if (moment(Number(startTimer)).diff(moment(), 'days') < 10) {
-      return next(
-        globalError({
-          errMessage: '開始日期不能是 10 日內'
-        })
-      )
+      if (
+        moment(Number(startTimer)).isBefore(moment(), 'days') ||
+        moment(Number(endTimer)).isBefore(moment(), 'days') ||
+        moment(Number(feedbackTimer)).isBefore(moment(), 'days')
+      ) {
+        return next(
+          globalError({
+            errMessage: '日期不可小於今日'
+          })
+        )
+      }
+
+      if (moment(Number(startTimer)).diff(moment(), 'days') < 10) {
+        return next(
+          globalError({
+            errMessage: '開始日期不能是 10 日內'
+          })
+        )
+      }
     }
 
     await Project.findByIdAndUpdate(projectId, {
@@ -787,7 +790,7 @@ router.patch(
       describe,
       videoUrl,
       startDate: Number(startTimer.substring(0, 10)),
-      endDate: earlyEnd ? Math.ceil(Date.now() / 1000) : Number(endTimer.substring(0, 10)),
+      endDate: Number(endTimer.substring(0, 10)),
       relatedUrl,
       feedbackItem,
       feedbackUrl,
