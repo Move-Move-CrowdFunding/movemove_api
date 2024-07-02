@@ -926,9 +926,9 @@ router.get(
       isRead: item.isRead,
       createTime: item.createTime,
       project: {
-        id: item.projectId.id,
-        title: item.projectId.title,
-        coverUrl: item.projectId.coverUrl
+        id: item.projectId?._id,
+        title: item.projectId?.title,
+        coverUrl: item.projectId?.coverUrl
       }
     }))
 
