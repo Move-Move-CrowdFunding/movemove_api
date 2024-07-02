@@ -246,7 +246,9 @@ router.get('/projects', authMiddleware, async (req, res) => {
                 "startDate": 1715792000,
                 "endDate": 1732384000,
                 "coverUrl": "https://i.imgur.com/UqUdehL.png",
-                "sponsorCount": 4
+                "sponsorCount": 4,
+                "feedbackItem": "手繪感謝小卡",
+                "feedbackMoney": 1000
               }
             ]
           },
@@ -360,9 +362,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
           content: 0,
           videoUrl: 0,
           relatedUrl: 0,
-          feedbackItem: 0,
           feedbackUrl: 0,
-          feedbackMoney: 0,
           feedbackDate: 0,
           createTime: 0,
           updateTime: 0
