@@ -75,6 +75,8 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
           "createTime": 1716704528,
           "updateTime": 1716704528,
           "nickName": "",
+          "achievedMoney": 1000,
+          "sponsorCount": 1,
         "reviewLog": [{
             "_id": "6646ac449c84d6afa1853002",
             "content": "請核准提案",
@@ -231,9 +233,45 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
         { $unwind: '$state' },
         { $match: stateFilter },
         {
+          $lookup: {
+            from: 'sponsors',
+            let: { projectId: '$_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ['$projectId', '$$projectId']
+                  }
+                }
+              }
+            ],
+            as: 'sponsorLog'
+          }
+        },
+        {
+          $addFields: {
+            sponsorLog: {
+              $map: {
+                input: '$sponsorLog',
+                as: 'sponsor',
+                in: {
+                  $mergeObjects: ['$$sponsor']
+                }
+              }
+            }
+          }
+        },
+        {
+          $addFields: {
+            achievedMoney: { $sum: '$sponsorLog.money' },
+            sponsorCount: { $size: '$sponsorLog' }
+          }
+        },
+        {
           $project: {
             userId: 0,
             state: 0,
+            sponsorLog: 0,
             'reviewLog.projectId': 0,
             'reviewLog.createTime': 0,
             'reviewLog.updateTime': 0
