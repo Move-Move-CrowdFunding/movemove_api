@@ -334,37 +334,40 @@ router.get('/projects', authMiddleware, async (req, res) => {
               }
             }
           }
-        },
-        {
-          $addFields: {
-            latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
-          }
-        },
-        {
-          $addFields: {
-            state: '$latestCheck.status'
-          }
-        },
-        { $unwind: '$state' },
-        {
-          $project: {
-            latestCheck: 0,
-            reviewLog: 0,
-            userId: 0,
-            introduce: 0,
-            teamName: 0,
-            email: 0,
-            phone: 0,
-            describe: 0,
-            content: 0,
-            videoUrl: 0,
-            relatedUrl: 0,
-            feedbackUrl: 0,
-            feedbackDate: 0,
-            createTime: 0,
-            updateTime: 0
-          }
-       }
+        }
+      },
+      {
+        $addFields: {
+          latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
+        }
+      },
+      {
+        $addFields: {
+          state: '$latestCheck.status'
+        }
+      },
+      { $unwind: '$state' },
+      {
+        $project: {
+          latestCheck: 0,
+          reviewLog: 0,
+          userId: 0,
+          introduce: 0,
+          teamName: 0,
+          email: 0,
+          phone: 0,
+          describe: 0,
+          content: 0,
+          videoUrl: 0,
+          relatedUrl: 0,
+          feedbackItem: 0,
+          feedbackUrl: 0,
+          feedbackMoney: 0,
+          feedbackDate: 0,
+          createTime: 0,
+          updateTime: 0
+        }
+      }
     ])
 
     const eachStateCount = {
