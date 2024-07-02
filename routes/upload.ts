@@ -6,10 +6,9 @@ import authMiddleware from '../middleware/authMiddleware'
 
 const router = express.Router()
 
-// 上傳圖片API /upload
+// 上傳圖片API POST /upload
 router.post('/', authMiddleware, async (req, res) => {
   /**
-   * #swagger.autoBody: false
    * #swagger.consumes = ['multipart/form-data']
    * #swagger.tags = ['Upload - 圖片上傳']
    * #swagger.description = '單一圖片上傳 (儲存在Imgur相簿)'

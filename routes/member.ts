@@ -169,11 +169,13 @@ router.get(
         // supportCount: sponsorList.length,
         // trackingStatus:
         //   req.isLogin && !!trackList.find((track: any) => track.userId.equals(new Types.ObjectId(req.payload.id))),
-        state: checkList.map((check: any) => ({
-          content: check.content,
-          status: check.status,
-          createTime: check.createTime
-        }))
+        reviewLog: checkList
+          .sort((a: any, b: any) => a.createTime - b.createTime)
+          .map((check: any) => ({
+            content: check.content,
+            status: check.status,
+            createTime: check.createTime
+          }))
       }
 
       responseSuccess.success({
@@ -506,9 +508,9 @@ router.get('/projects', authMiddleware, async (req, res) => {
         },
         {
           $addFields: {
-            id: "$_id",
-            achievedMoney: { $sum: "$sponsorLog.money" },
-            sponsorCount:{ $size: '$sponsorLog'},
+            id: '$_id',
+            achievedMoney: { $sum: '$sponsorLog.money' },
+            sponsorCount: { $size: '$sponsorLog' }
           }
         },
         {
