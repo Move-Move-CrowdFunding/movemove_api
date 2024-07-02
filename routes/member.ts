@@ -473,9 +473,7 @@ router.get('/projects', authMiddleware, async (req, res) => {
           content: 0,
           videoUrl: 0,
           relatedUrl: 0,
-          feedbackItem: 0,
           feedbackUrl: 0,
-          feedbackMoney: 0,
           feedbackDate: 0,
           createTime: 0,
           updateTime: 0
