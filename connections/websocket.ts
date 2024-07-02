@@ -23,7 +23,7 @@ async function getUnRead(socket: any, approveUserId = '') {
     })
   }
 
-  const decoded: any = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
+  const decoded: any = jwt.verify(token.trim(), (process.env as any).JWT_SECRET_KEY)
   try {
     const unReadCount = await Notification.find({
       userId: decoded.id,
