@@ -6,19 +6,16 @@
 
 > 募資平台的核心理念在於透過眾人的集體力量，在募資平台上支持以人為本，共同建立更美好社會互助
 
-- [線上觀看連結](https://github.com/orgs/Move-Move-CrowdFunding/repositories)
+- [線上觀看連結](https://movemove-api.koyeb.app/api-docs/)
 
 ## 功能
 
 測試帳號密碼
 
 ```bash
-帳號： example@example.com
-密碼： example
+帳號： user@gmail.com
+密碼： user1234
 ```
-
-- [] 登入
-- [] 登出
 
 ## 安裝
 
@@ -52,7 +49,7 @@ npm run start
 
 ### 開啟專案
 
-在瀏覽器網址列輸入以下即可看到畫面
+在瀏覽器網址列輸入以下即可看到畫面, 以 PORT=3000 為例
 
 ```bash
 http://localhost:3000/
@@ -98,7 +95,6 @@ GMAIL_REFRESH_TOKEN= # Gmail API refresh token
 ## 資料夾說明
 
 - connections - 資料庫連接
-- controllers - 控制器放置處
 - interface - TypeScript 型別
 - middleware - API 攔截器
 - modules - Mongoose 模組放置處
@@ -114,34 +110,16 @@ GMAIL_REFRESH_TOKEN= # Gmail API refresh token
 - mongoose v8.3.2
 - typescript v5.4.5
 - swagger v2.23.7
+- JWT 登入註冊
+- nodemailer v6.9.13
+- imgur v2.4.2
   ...
 
 ## 第三方服務
 
 - 藍新金流
 - Imgur
-  ...
-
-## CI/CD 說明
-
-此專案有使用 Github Actions，所以發起 PR 時會自動執行以下動作：
-
-- 建立 Node.js 環境
-- 安裝相依套件
-- 編譯程式碼
-- 執行 ESLint 掃描
-- 執行測試
-  ...
-
-當專案 merge 到 main 時會自動執行以下動作：
-
-- 建立 Node.js 環境
-- 安裝相依套件
-- 編譯程式碼
-- 執行 ESLint 掃描
-- 執行測試
-- 部署到 Render
-  ...
+- Gmail
 
 ## 開發人員
 
@@ -150,4 +128,10 @@ GMAIL_REFRESH_TOKEN= # Gmail API refresh token
 - [圈圈](https://github.com/panduola666)
 - [羽](https://github.com/linglingsyu)
 - [Hank](https://github.com/tw1720)
-  ...
+- [YC](https://github.com/yichienlu)
+- [Ken](https://github.com/kenlee100)
+
+教練：
+
+* 鉛筆
+* Alpha

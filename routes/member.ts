@@ -7,6 +7,7 @@ import catchAll from '../service/catchAll'
 import globalError from '../service/globalError'
 import responseSuccess from '../service/responseSuccess'
 import pagination from '../utils/pagination'
+import WS from '../connections/websocket'
 
 import authMiddleware from '../middleware/authMiddleware'
 
@@ -294,37 +295,42 @@ router.get('/projects', authMiddleware, async (req, res) => {
       errorMsg.push('提案狀態錯誤')
     }
 
-    if (errorMsg.length === 0) {
-      const allProjects = await Project.aggregate([
-        {
-          $match: { userId: new Types.ObjectId(userId) }
-        },
-        {
-          $lookup: {
-            from: 'checks',
-            let: { projectId: '$_id' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$projectId', '$$projectId']
-                  }
+    if (errorMsg.length) {
+      return res.status(400).json({
+        status: 'error',
+        message: `發生錯誤 ${errorMsg.join()}`
+      })
+    }
+
+    const allProjects = await Project.aggregate([
+      {
+        $match: { userId: new Types.ObjectId(userId) }
+      },
+      {
+        $lookup: {
+          from: 'checks',
+          let: { projectId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$projectId', '$$projectId']
                 }
-              },
-              { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
-            ],
-            as: 'reviewLog'
-          }
-        },
-        {
-          $addFields: {
-            reviewLog: {
-              $map: {
-                input: '$reviewLog',
-                as: 'check',
-                in: {
-                  $mergeObjects: ['$$check', { timestamp: '$$check.updateTime' }]
-                }
+              }
+            },
+            { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
+          ],
+          as: 'reviewLog'
+        }
+      },
+      {
+        $addFields: {
+          reviewLog: {
+            $map: {
+              input: '$reviewLog',
+              as: 'check',
+              in: {
+                $mergeObjects: ['$$check', { timestamp: '$$check.updateTime' }]
               }
             }
           }
@@ -358,190 +364,183 @@ router.get('/projects', authMiddleware, async (req, res) => {
             createTime: 0,
             updateTime: 0
           }
-        }
-      ])
+       }
+    ])
 
-      const eachStateCount = {
-        ongoing: allProjects.filter((obj) => obj.state == 1 && obj.endDate >= Date.now() / 1000).length,
-        rejected: allProjects.filter((obj) => obj.state == -1).length,
-        pending: allProjects.filter((obj) => obj.state == 0).length,
-        ended: allProjects.filter((obj) => obj.state == 1 && obj.endDate < Date.now() / 1000).length
-        // total: allProjects.length,
-        // allProjects,
-        // now: Date.now()/1000
-      }
-      let totalProjects = 0
-      switch (Number(state)) {
-        case 1:
-          totalProjects = eachStateCount.ongoing
-          break
-        case 0:
-          totalProjects = eachStateCount.pending
-          break
-        case -1:
-          totalProjects = eachStateCount.rejected
-          break
-        case 2:
-          totalProjects = eachStateCount.ended
-          break
-      }
-
-      const totalPage = Math.ceil(totalProjects / Number(pageSize))
-      const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
-
-      //
-      // 提案狀態查詢邏輯
-      let stateFilter = {}
-      switch (Number(state)) {
-        case 0:
-          stateFilter = { 'latestCheck.status': 0 }
-          break
-        case 1:
-          stateFilter = { 'latestCheck.status': 1, endDate: { $gte: Date.now() / 1000 } }
-          break
-        case -1:
-          stateFilter = { 'latestCheck.status': -1 }
-          break
-        case 2:
-          stateFilter = { 'latestCheck.status': 1, endDate: { $lt: Date.now() / 1000 } }
-          break
-      }
-
-      const list = await Project.aggregate([
-        {
-          $match: { userId: new Types.ObjectId(userId) }
-        },
-        {
-          $lookup: {
-            from: 'checks',
-            let: { projectId: '$_id' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$projectId', '$$projectId']
-                  }
-                }
-              },
-              { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
-            ],
-            as: 'reviewLog'
-          }
-        },
-        {
-          $addFields: {
-            reviewLog: {
-              $map: {
-                input: '$reviewLog',
-                as: 'check',
-                in: {
-                  $mergeObjects: ['$$check', { timestamp: '$$check.updateTime' }]
-                }
-              }
-            }
-          }
-        },
-        {
-          $addFields: {
-            latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
-          }
-        },
-        {
-          $addFields: {
-            state: '$latestCheck.status'
-          }
-        },
-        { $unwind: '$state' },
-        {
-          $project: {
-            // latestCheck: 0,
-            reviewLog: 0,
-            userId: 0,
-            introduce: 0,
-            teamName: 0,
-            email: 0,
-            phone: 0,
-            describe: 0,
-            content: 0,
-            videoUrl: 0,
-            relatedUrl: 0,
-            feedbackItem: 0,
-            feedbackUrl: 0,
-            feedbackMoney: 0,
-            feedbackDate: 0,
-            createTime: 0,
-            updateTime: 0
-          }
-        },
-
-        { $match: stateFilter },
-        { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
-        { $limit: Number(pageSize) },
-        {
-          $lookup: {
-            from: 'sponsors',
-            let: { projectId: '$_id' },
-            pipeline: [
-              {
-                $match: {
-                  $expr: {
-                    $eq: ['$projectId', '$$projectId']
-                  }
-                }
-              }
-            ],
-            as: 'sponsorLog'
-          }
-        },
-        {
-          $addFields: {
-            sponsorLog: {
-              $map: {
-                input: '$sponsorLog',
-                as: 'sponsor',
-                in: {
-                  $mergeObjects: ['$$sponsor']
-                }
-              }
-            }
-          }
-        },
-        {
-          $addFields: {
-            id: '$_id',
-            achievedMoney: { $sum: '$sponsorLog.money' },
-            sponsorCount: { $size: '$sponsorLog' }
-          }
-        },
-        {
-          $project: {
-            sponsorLog: 0,
-            _id: 0,
-            state: 0,
-            latestCheck: 0
-          }
-        }
-      ])
-
-      return res.status(200).json({
-        status: 'success',
-        message: totalProjects ? '提案列表取得成功' : '找不到相符條件的資料',
-        results: {
-          eachStateCount,
-          list
-        },
-        pagination: {
-          pageNo: Number(safePageNo),
-          pageSize: Number(pageSize),
-          count: totalProjects
-        }
-      })
-    } else {
-      return res.status(400).json({
-        status: 'error',
-        message: `發生錯誤 ${errorMsg.join()}`
-      })
+    const eachStateCount = {
+      ongoing: allProjects.filter((obj) => Number(obj.state) === 1 && obj.endDate >= Date.now() / 1000).length,
+      rejected: allProjects.filter((obj) => Number(obj.state) === -1).length,
+      pending: allProjects.filter((obj) => Number(obj.state) === 0).length,
+      ended: allProjects.filter((obj) => Number(obj.state) === 1 && obj.endDate < Date.now() / 1000).length
+      // total: allProjects.length,
+      // allProjects,
+      // now: Date.now()/1000
     }
+    let totalProjects = 0
+    switch (Number(state)) {
+      case 1:
+        totalProjects = eachStateCount.ongoing
+        break
+      case 0:
+        totalProjects = eachStateCount.pending
+        break
+      case -1:
+        totalProjects = eachStateCount.rejected
+        break
+      case 2:
+        totalProjects = eachStateCount.ended
+        break
+    }
+
+    const totalPage = Math.ceil(totalProjects / Number(pageSize))
+    const safePageNo = Number(pageNo) > totalPage ? 1 : pageNo
+
+    // 提案狀態查詢邏輯
+    let stateFilter = {}
+    switch (Number(state)) {
+      case 0:
+        stateFilter = { 'latestCheck.status': 0 }
+        break
+      case 1:
+        stateFilter = { 'latestCheck.status': 1, endDate: { $gte: Date.now() / 1000 } }
+        break
+      case -1:
+        stateFilter = { 'latestCheck.status': -1 }
+        break
+      case 2:
+        stateFilter = { 'latestCheck.status': 1, endDate: { $lt: Date.now() / 1000 } }
+        break
+    }
+
+    const list = await Project.aggregate([
+      {
+        $match: { userId: new Types.ObjectId(userId) }
+      },
+      {
+        $lookup: {
+          from: 'checks',
+          let: { projectId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$projectId', '$$projectId']
+                }
+              }
+            },
+            { $sort: { updateTime: 1 } } // 審核紀錄由舊到新排序
+          ],
+          as: 'reviewLog'
+        }
+      },
+      {
+        $addFields: {
+          reviewLog: {
+            $map: {
+              input: '$reviewLog',
+              as: 'check',
+              in: {
+                $mergeObjects: ['$$check', { timestamp: '$$check.updateTime' }]
+              }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          latestCheck: { $arrayElemAt: ['$reviewLog', -1] }
+        }
+      },
+      {
+        $addFields: {
+          state: '$latestCheck.status'
+        }
+      },
+      { $unwind: '$state' },
+      {
+        $project: {
+          // latestCheck: 0,
+          reviewLog: 0,
+          userId: 0,
+          introduce: 0,
+          teamName: 0,
+          email: 0,
+          phone: 0,
+          describe: 0,
+          content: 0,
+          videoUrl: 0,
+          relatedUrl: 0,
+          feedbackItem: 0,
+          feedbackUrl: 0,
+          feedbackMoney: 0,
+          feedbackDate: 0,
+          createTime: 0,
+          updateTime: 0
+        }
+      },
+
+      { $match: stateFilter },
+      { $skip: (Number(safePageNo) - 1) * Number(pageSize) },
+      { $limit: Number(pageSize) },
+      {
+        $lookup: {
+          from: 'sponsors',
+          let: { projectId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ['$projectId', '$$projectId']
+                }
+              }
+            }
+          ],
+          as: 'sponsorLog'
+        }
+      },
+      {
+        $addFields: {
+          sponsorLog: {
+            $map: {
+              input: '$sponsorLog',
+              as: 'sponsor',
+              in: {
+                $mergeObjects: ['$$sponsor']
+              }
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          id: '$_id',
+          achievedMoney: { $sum: '$sponsorLog.money' },
+          sponsorCount: { $size: '$sponsorLog' }
+        }
+      },
+      {
+        $project: {
+          sponsorLog: 0,
+          _id: 0,
+          state: 0,
+          latestCheck: 0
+        }
+      }
+    ])
+
+    return res.status(200).json({
+      status: 'success',
+      message: totalProjects ? '提案列表取得成功' : '找不到相符條件的資料',
+      results: {
+        eachStateCount,
+        list
+      },
+      pagination: {
+        pageNo: Number(safePageNo),
+        pageSize: Number(pageSize),
+        count: totalProjects
+      }
+    })
   } catch (error) {
     console.log(error)
     return res.status(500).json({
@@ -873,7 +872,6 @@ router.get(
             "hasNext": false,
             "totalPage": 1
           },
-          "unReadCount": 0
         }
       }
       * #swagger.responses[401] = {
@@ -919,10 +917,7 @@ router.get(
       { $set: { isRead: true } }
     )
 
-    const unReadCount = await Notification.find({
-      userId: req!.user.id,
-      isRead: false
-    }).countDocuments()
+    WS.getUnRead(req.app.io)
 
     const results = pageData.results.map((item: any) => ({
       id: item._id,
@@ -941,8 +936,7 @@ router.get(
       body: {
         message: '取得最新通知成功',
         ...pageData,
-        results,
-        unReadCount
+        results
       }
     })
   })
@@ -985,6 +979,7 @@ router.get('/support', authMiddleware, async (req, res) => {
         "categoryKey": 1,
         "feedBackDate": 1718118294,
         "project": {
+          "_id": "66403c34b00d1fe281742a62",
           "title": "壯闊台灣開源計畫｜公開災害應變知識，一起自主學習！",
           "feedbackItem": "止血帶包",
           "categoryKey": 1
@@ -1050,6 +1045,7 @@ router.get('/support', authMiddleware, async (req, res) => {
             categoryKey: '$projectId.categoryKey',
             feedBackDate: '$projectId.feedbackDate',
             project: {
+              _id: '$projectId._id',
               title: '$projectId.title',
               feedbackItem: '$projectId.feedbackItem',
               categoryKey: '$projectId.categoryKey'
@@ -1057,7 +1053,6 @@ router.get('/support', authMiddleware, async (req, res) => {
           }
         },
         { $unwind: '$email' },
-        { $unwind: '$feedBackDate' },
         {
           $project: {
             userId: 0,

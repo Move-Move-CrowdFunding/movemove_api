@@ -5,7 +5,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const authorizationHeader = req.header('Authorization') || req.header('authorization')
 
   if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ success: 'error', message: ' Authorization header 缺失 Bearer' })
+    return res.status(401).json({ success: 'error', message: 'Authorization header 缺失 Bearer' })
   }
 
   const token = authorizationHeader.replace('Bearer ', '')
@@ -18,7 +18,7 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     next()
   } catch (err) {
     console.error(err)
-    return res.status(401).json({ success: 'error', message: 'token 已失效，請重新登入' })
+    return res.status(400).json({ success: 'error', message: 'token 已失效，請重新登入' })
   }
 }
 export default authMiddleware

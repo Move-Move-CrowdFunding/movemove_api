@@ -37,7 +37,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     }
     * #swagger.parameters['state'] = {
       in: 'query',
-      description: '提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）',
+      description: '提案狀態 （N = 0:[預設]送審, 1:核准, -1:否准, 2:已結束, 3:全部）',
       type: 'number',
       default: '0'
     }
@@ -90,7 +90,8 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
             "state": 0,
             "search": "關鍵字搜尋"
           }
-      }
+        }
+      ]
     }
   }
   *
@@ -115,7 +116,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
     if (![1, -1, 'true', 'false'].includes(sortDesc as any)) {
       errorMsg.push('提案新舊排序錯誤')
     } else {
-      sort = [-1, 'false'].includes(sortDesc as any) ? -1 : 1
+      sort = [-1, 'false'].includes(sortDesc as any) ? 1 : -1
     }
 
     // 提案狀態 （N = 0:[預設]送審 1:核准 -1:否准 2:已結束 3:全部）
@@ -123,7 +124,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
       errorMsg.push('提案狀態錯誤')
     }
 
-    if (errorMsg.length === 0) {
+    if (!errorMsg.length) {
       // 搜尋與分頁參數
       let filter = {}
       let totalProjects = 0
@@ -131,7 +132,7 @@ router.get('/projects', authMiddleware, checkAdminAuth, async (req, res) => {
       // 提案狀態查詢邏輯
       let stateFilter = {}
       if ([0, 1, -1, 2].includes(Number(state))) {
-        stateFilter = Number(state) === 2 ? { endDate: { $lt: Date.now() / 1000 } } : { 'state.status': state }
+        stateFilter = Number(state) === 2 ? { endDate: { $lt: Date.now() / 1000 } } : { 'state.status': Number(state) }
       }
 
       filter = { title: { $regex: search } }
@@ -468,7 +469,7 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
       errorMsg.push('需要審核說明')
     }
 
-    if (errorMsg.length === 0) {
+    if (!errorMsg.length) {
       // 避免重複審核已有核准紀錄的提案
       const findProjectIsChecked = await CheckModel.countDocuments({ projectId, status: 1 })
       if (findProjectIsChecked > 0) {
@@ -476,33 +477,35 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
           status: 'error',
           message: '該筆提案已有核准紀錄'
         })
-      }
-
-      await createCheck({
-        projectId: projectId as any,
-        content,
-        status: approve,
-        next
-      })
-
-      const notification = await autoNotification({
-        userId,
-        projectId: new Types.ObjectId(projectId),
-        content: '審核通知「<projectName>」',
-        next
-      })
-
-      if (!notification) {
-        return res.status(400).json({
-          status: 'error',
-          message: '建立通知時發生錯誤'
+      } else {
+        await createCheck({
+          projectId: projectId as any,
+          content,
+          status: approve,
+          next
         })
-      }
 
-      return res.status(200).json({
-        status: 'success',
-        message: '審核提案資料成功'
-      })
+        const notification = await autoNotification({
+          req,
+          userId,
+          projectId: new Types.ObjectId(projectId),
+          content: '審核通知「<projectName>」',
+          status: approve,
+          next
+        })
+
+        if (!notification) {
+          return res.status(400).json({
+            status: 'error',
+            message: '建立通知時發生錯誤'
+          })
+        } else {
+          return res.status(200).json({
+            status: 'success',
+            message: '審核提案資料成功'
+          })
+        }
+      }
     } else {
       return res.status(400).json({
         status: 'error',

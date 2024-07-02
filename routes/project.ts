@@ -138,7 +138,8 @@ router.get(
     // 分頁篩選參數
     const option: paginationOption = {
       filter: {
-        title: new RegExp(String(keyword), 'g')
+        title: new RegExp(String(keyword), 'g'),
+        startDate: { $lte: Math.ceil(Date.now() / 1000) }
       },
       sort: {
         startDate: Number(sort) === 1 ? -1 : 1
@@ -274,6 +275,7 @@ router.get(
             "feedbackDate": 1721577600,
             "targetMoney": 30000,
             "teamName": "弱勢救星",
+            "avatar": "",
             "phone": "0938938438",
             "email": "nomail@mail.com",
             "relatedUrl": "",
@@ -297,7 +299,8 @@ router.get(
     const data = await Project.aggregate([
       {
         $match: {
-          _id: new Types.ObjectId(req.params.id)
+          _id: new Types.ObjectId(req.params.id),
+          startDate: { $lte: Math.ceil(Date.now() / 1000) }
         }
       },
       {
@@ -341,6 +344,8 @@ router.get(
       )
     }
     const [passProject] = data
+    const projectUser = await User.findById(passProject.userId)
+
     responseSuccess.success({
       res,
       body: {
@@ -361,6 +366,7 @@ router.get(
           feedbackDate: passProject.feedbackDate,
           targetMoney: passProject.targetMoney,
           teamName: passProject.teamName,
+          avatar: projectUser!.avatar,
           phone: passProject.phone,
           email: passProject.email,
           relatedUrl: passProject.relatedUrl,
@@ -737,34 +743,40 @@ router.patch(
     }
     // 日期驗證
     const startTimer = String(startDate).padEnd(13, '0')
-    const endTimer = String(endDate).padEnd(13, '0')
+    let endTimer = String(endDate).padEnd(13, '0')
     const feedbackTimer = String(feedbackDate).padEnd(13, '0')
 
-    if (moment(Number(endTimer)).isBefore(moment(Number(startTimer)))) {
-      return next(
-        globalError({
-          errMessage: '結束時間不可小於開始時間'
-        })
-      )
-    }
+    if (!earlyEnd) {
+      if (moment(Number(endTimer)).isBefore(moment(Number(startTimer)))) {
+        return next(
+          globalError({
+            errMessage: '結束時間不可小於開始時間'
+          })
+        )
+      }
 
-    if (
-      moment(Number(startTimer)).isBefore(moment(), 'days') ||
-      moment(Number(endTimer)).isBefore(moment(), 'days') ||
-      moment(Number(feedbackTimer)).isBefore(moment(), 'days')
-    ) {
-      return next(
-        globalError({
-          errMessage: '日期不可小於今日'
-        })
-      )
+      if (
+        moment(Number(startTimer)).isBefore(moment(), 'days') ||
+        moment(Number(endTimer)).isBefore(moment(), 'days') ||
+        moment(Number(feedbackTimer)).isBefore(moment(), 'days')
+      ) {
+        return next(
+          globalError({
+            errMessage: '日期不可小於今日'
+          })
+        )
+      }
+
+      if (moment(Number(startTimer)).diff(moment(), 'days') < 10) {
+        return next(
+          globalError({
+            errMessage: '開始日期不能是 10 日內'
+          })
+        )
+      }
     }
-    if (moment(Number(startTimer)).diff(moment(), 'days') < 10) {
-      return next(
-        globalError({
-          errMessage: '開始日期不能是 10 日內'
-        })
-      )
+    if (earlyEnd && !moment(Number(endTimer)).isSame(moment(), 'days')) {
+      endTimer = String(Date.now())
     }
 
     await Project.findByIdAndUpdate(projectId, {
@@ -781,7 +793,7 @@ router.patch(
       describe,
       videoUrl,
       startDate: Number(startTimer.substring(0, 10)),
-      endDate: earlyEnd ? Math.ceil(Date.now() / 1000) : Number(endTimer.substring(0, 10)),
+      endDate: Number(endTimer.substring(0, 10)),
       relatedUrl,
       feedbackItem,
       feedbackUrl,
@@ -789,28 +801,36 @@ router.patch(
       feedbackDate
     })
 
-    const checkData = await createCheck({
-      projectId: projectData._id,
-      content: '',
-      status: 0,
-      next
-    })
+    if (earlyEnd) {
+      responseSuccess.success({
+        res,
+        body: {
+          message: '已結束該提案'
+        }
+      })
+    } else {
+      const checkData = await createCheck({
+        projectId: projectData._id,
+        content: '',
+        status: 0,
+        next
+      })
 
-    if (!checkData) {
-      return next(
-        globalError({
-          httpStatus: 400,
-          errMessage: '修改提案失敗'
-        })
-      )
-    }
-
-    responseSuccess.success({
-      res,
-      body: {
-        message: '修改提案成功'
+      if (!checkData) {
+        return next(
+          globalError({
+            httpStatus: 400,
+            errMessage: '修改提案失敗'
+          })
+        )
       }
-    })
+      responseSuccess.success({
+        res,
+        body: {
+          message: '修改提案成功'
+        }
+      })
+    }
   })
 )
 
@@ -839,32 +859,5 @@ router.delete(
     })
   })
 )
-
-// router.post(
-//   '/test',
-//   catchAll(async (req: paginationReq, res: Response, next) => {
-//     // await Track.create({ ...req.body })
-//     const { userId, projectId, content } = req.body as any
-//     console.log('外面', {
-//       userId,
-//       projectId,
-//       content
-//     })
-
-//     const data = await autoNotification({
-//       userId,
-//       projectId,
-//       content,
-//       next
-//     })
-//     responseSuccess.success({
-//       res,
-//       body: {
-//         message: '成功',
-//         data
-//       }
-//     })
-//   })
-// )
 
 export default router

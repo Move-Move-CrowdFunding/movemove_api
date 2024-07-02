@@ -10,6 +10,7 @@ import requiredRules from '../utils/requiredRules'
 import authMiddleware from '../middleware/authMiddleware'
 
 import tokenInfo from '../interface/tokenInfo'
+import projectType from '../interface/project'
 
 import Sponsor from '../models/Sponsor'
 import Project from '../models/Project'
@@ -78,10 +79,9 @@ router.post(
      *
      */
     const { projectId, money, userName, phone, receiver, receiverPhone, address, isNeedFeedback } = req.body
-
     const requiredError: string[] = requiredRules({
       req,
-      params: ['projectId', 'money', 'userName', 'phone', 'isNeedFeedback'],
+      params: ['projectId', 'money', 'userName', 'phone'],
       messageArea: 'payment'
     })
     if (requiredError.length) {
@@ -106,12 +106,21 @@ router.post(
         )
       }
     }
-    const checkProject = await Project.findById(projectId)
+    const checkProject: projectType | null = await Project.findById(projectId)
     if (!checkProject) {
       return next(
         globalError({
           httpStatus: 404,
           errMessage: '查無該提案'
+        })
+      )
+    }
+    console.log(checkProject)
+    if (checkProject.endDate * 1000 <= Date.now()) {
+      return next(
+        globalError({
+          httpStatus: 404,
+          errMessage: '該提案已結束'
         })
       )
     }
@@ -125,7 +134,7 @@ router.post(
       receiver,
       receiverPhone,
       address,
-      isNeedFeedback,
+      isNeedFeedback: !!isNeedFeedback,
       MerchantOrderNo: String(Date.now()),
       TimeStamp: Math.ceil(Date.now() / 1000)
     }

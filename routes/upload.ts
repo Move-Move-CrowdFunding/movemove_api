@@ -3,6 +3,7 @@ import multer from 'multer'
 import fs from 'fs'
 import { ImgurClient } from 'imgur'
 import authMiddleware from '../middleware/authMiddleware'
+import { blob } from 'node:stream/consumers'
 
 const router = express.Router()
 
@@ -71,24 +72,18 @@ router.post('/', authMiddleware, async (req, res) => {
           clientSecret: process.env.IMGUR_CLIENT_SECRET,
           refreshToken: process.env.IMGUR_REFRESH_TOKEN
         })
+
         // 圖片上傳至指定好的 imgur 相簿 (imgur ^2.0 API)
         imgPath = (req.files as any)[0].path
         const imgFile = fs.createReadStream(imgPath)
-        const response = await client
-          .upload({
-            image: imgFile as any,
-            type: 'stream',
-            album: process.env.IMGUR_ALBUM_ID
-          })
-          .finally(() => {
-            // 刪除暫存圖片
-            fs.unlink(imgPath, (err) => {
-              if (err) throw err
-              // console.log(`${imgPath} was deleted`)
-            })
-          })
+        const response = await client.upload({
+          image: imgFile as any,
+          type: 'stream',
+          album: process.env.IMGUR_ALBUM_ID
+        })
+
         // 回傳成功上傳的圖片網址
-        if (response.success) {
+        if (response.status === 200) {
           res.status(200).json({
             status: 'success',
             message: '圖片上傳成功',
@@ -99,13 +94,44 @@ router.post('/', authMiddleware, async (req, res) => {
             }
           })
         } else {
-          // 上傳到imgur錯誤
-          res.status(400).json({
-            status: 'error',
-            message: `發生錯誤: ${response.data}`
-          })
+          // imgur上傳失敗時，改備用圖床(不支援刪除)
+          const bakImgSpace = 'https://im.gurl.eu.org'
+          const formData = new FormData()
+          const blobFile = await blob(fs.createReadStream(imgPath))
+          formData.append('file', blobFile as Blob)
+          const requestOptions = {
+            method: 'POST',
+            body: formData,
+            redirect: 'follow'
+          }
+          const bakSpaceRes = await fetch(bakImgSpace + '/upload', requestOptions as object)
+            .then((response) => response.json())
+            .then((result) => result)
+
+          if (bakSpaceRes[0].src) {
+            // bakSpaceRes.status >= 200 && bakSpaceRes.status < 300
+            const bakImgUrl = bakImgSpace + bakSpaceRes[0].src
+            res.status(200).json({
+              status: 'success',
+              message: '圖片上傳成功',
+              results: {
+                imageUrl: bakImgUrl
+              }
+            })
+          } else {
+            // 上傳到imgur錯誤
+            res.status(400).json({
+              status: 'error',
+              message: `發生錯誤: ${response.data}`
+            })
+          }
         }
       }
+      // 刪除暫存圖片
+      fs.unlink(imgPath, (err) => {
+        if (err) throw err
+        // console.log(`${imgPath} was deleted`)
+      })
     })
   } catch (error) {
     return res.status(500).json({
