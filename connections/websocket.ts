@@ -24,18 +24,20 @@ async function getUnRead(socket: any, approveUserId = '') {
   }
 
   const decoded: any = jwt.verify(token.trim(), (process.env as any).JWT_SECRET_KEY)
+  const userId = approveUserId || decoded.id
+
+  socket.join(userId)
   try {
     const unReadCount = await Notification.find({
-      userId: decoded.id,
+      userId,
       isRead: false
     }).countDocuments()
-
-    socket.emit('unRead', {
+    socket.to(userId).emit('unRead', {
       status: 'success',
       message: '取得未讀通知成功',
       results: {
         count: unReadCount,
-        isChange: String(approveUserId) === String(decoded.id)
+        isChange: !!approveUserId
       }
     })
   } catch (error) {
