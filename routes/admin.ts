@@ -527,7 +527,7 @@ router.post('/projects/:projectId', authMiddleware, checkAdminAuth, async (req, 
           req,
           userId,
           projectId: new Types.ObjectId(projectId),
-          content: '審核通知「<projectName>」',
+          content: '審核通知「<projectName>」' + (approve === 1 ? '已通過審核！' : '未通過，請修改後重新送審'),
           status: approve,
           next
         })
