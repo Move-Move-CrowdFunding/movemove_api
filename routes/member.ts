@@ -862,7 +862,8 @@ router.get(
               "project": {
                   "id": "66403c34b00d1fe281742a62",
                   "title": "測試修改送審",
-                  "coverUrl": "https://fakeimg.pl/300/"
+                  "coverUrl": "https://fakeimg.pl/300/",
+                  "userId":''
               }
             }],
           "pagination": {
@@ -928,7 +929,8 @@ router.get(
       project: {
         id: item.projectId?._id,
         title: item.projectId?.title,
-        coverUrl: item.projectId?.coverUrl
+        coverUrl: item.projectId?.coverUrl,
+        userId: item.projectId?.userId
       }
     }))
 
