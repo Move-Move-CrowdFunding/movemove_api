@@ -9,15 +9,14 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   }
 
   const token = authorizationHeader.replace('Bearer ', '')
-  if (!token) {
+  if (!token || ['null', 'undefined'].includes(token)) {
     return res.status(401).json({ success: 'error', message: 'Authorization token 不合法' })
   }
   try {
-    const decoded = jwt.verify(token.trim(), process.env.JWT_SECRET_KEY as GetPublicKeyOrSecret | Secret)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY as GetPublicKeyOrSecret | Secret)
     ;(req as any).user = decoded
     next()
   } catch (err) {
-    console.error(err)
     return res.status(400).json({ success: 'error', message: 'token 已失效，請重新登入' })
   }
 }
