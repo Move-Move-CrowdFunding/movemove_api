@@ -50,7 +50,9 @@ async function getUnRead(socket: any, io: any, approveUserId = '') {
 }
 
 function getCookieVal(cookieKey: string, cookie: string) {
-  const params = cookie.split(';').find((i: string) => i.includes(`${cookieKey}=`))
+  const params = String(cookie)
+    .split(';')
+    .find((i: string) => i.includes(`${cookieKey}=`))
   return String(params).replace(`${cookieKey}=`, '').trim()
 }
 
