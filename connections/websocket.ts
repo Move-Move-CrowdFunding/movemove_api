@@ -10,13 +10,13 @@ function connectSocketIO(server: any, app: any) {
   io.on('connection', (socket) => {
     app.io = socket
     app.server = io
-    socket.on('getUnRead', async () => await getUnRead(socket, io))
+    socket.on('getUnRead', async (data) => await getUnRead({ socket, io, token: data.token }))
   })
 }
 
-async function getUnRead(socket: any, io: any, approveUserId = '') {
-  const cookie = socket?.handshake?.headers.cookie
-  const token = getCookieVal('userToken', cookie)
+async function getUnRead({ socket, io, approveUserId = '', token = '' }: any) {
+  // const cookie = socket?.handshake?.headers.cookie
+  // const token = getCookieVal('userToken', cookie)
   if (!token) {
     return socket.to(socket.id).emit('error', {
       status: 'error',
@@ -49,12 +49,12 @@ async function getUnRead(socket: any, io: any, approveUserId = '') {
   }
 }
 
-function getCookieVal(cookieKey: string, cookie: string) {
-  const params = String(cookie)
-    .split(';')
-    .find((i: string) => i.includes(`${cookieKey}=`))
-  return String(params).replace(`${cookieKey}=`, '').trim()
-}
+// function getCookieVal(cookieKey: string, cookie: string) {
+//   const params = String(cookie)
+//     .split(';')
+//     .find((i: string) => i.includes(`${cookieKey}=`))
+//   return String(params).replace(`${cookieKey}=`, '').trim()
+// }
 
 export default {
   connectSocketIO,
