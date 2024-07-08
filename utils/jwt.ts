@@ -8,7 +8,7 @@ export const getJWTtoken = (auth: number, id: string) => {
 
 export const verifyJWTtoken = (token: string) => {
   const SecretKey = process.env.JWT_SECRET_KEY || ''
-  return jwt.verify(token.trim(), SecretKey)
+  return jwt.verify(token, SecretKey)
 }
 
 export const generateEmailToken = () => {

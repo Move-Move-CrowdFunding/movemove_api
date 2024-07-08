@@ -9,15 +9,16 @@ function connectSocketIO(server: any, app: any) {
 
   io.on('connection', (socket) => {
     app.io = socket
-    socket.on('getUnRead', async () => await getUnRead(socket))
+    app.server = io
+    socket.on('getUnRead', async () => await getUnRead(socket, io))
   })
 }
 
-async function getUnRead(socket: any, approveUserId = '') {
-  const cookie = socket.handshake?.headers.cookie
+async function getUnRead(socket: any, io: any, approveUserId = '') {
+  const cookie = socket?.handshake?.headers.cookie
   const token = getCookieVal('userToken', cookie)
   if (!token) {
-    return socket.emit('error', {
+    return socket.to(socket.id).emit('error', {
       status: 'error',
       msg: '尚未登入'
     })
@@ -32,7 +33,7 @@ async function getUnRead(socket: any, approveUserId = '') {
       userId,
       isRead: false
     }).countDocuments()
-    socket.to(userId).emit('unRead', {
+    io.to(userId).emit('unRead', {
       status: 'success',
       message: '取得未讀通知成功',
       results: {
@@ -41,7 +42,7 @@ async function getUnRead(socket: any, approveUserId = '') {
       }
     })
   } catch (error) {
-    return socket.emit('error', {
+    return io.to(userId).emit('error', {
       status: 'error',
       msg: '伺服器錯誤'
     })

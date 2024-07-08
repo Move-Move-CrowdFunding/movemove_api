@@ -16,7 +16,7 @@ const parseToken = (req: Request, res: Response, next: NextFunction) => {
   }
 
   try {
-    const decoded = jwt.verify(token.trim(), (process.env as any).JWT_SECRET_KEY)
+    const decoded = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
     ;(req as tokenInfo).isLogin = true
     ;(req as tokenInfo).payload = decoded
 

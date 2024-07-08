@@ -61,7 +61,7 @@ const autoNotification = async ({
     projectId,
     content: finalContent.trim()
   })
-  WS.getUnRead(req.app.io, String(userId))
+  WS.getUnRead(req.app.io, req.app.server, String(userId))
   return data
 }
 

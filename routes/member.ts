@@ -920,7 +920,7 @@ router.get(
       { $set: { isRead: true } }
     )
 
-    WS.getUnRead(req.app.io)
+    WS.getUnRead(req.app.io, req.app.server)
 
     const results = pageData.results.map((item: any) => ({
       id: item._id,
