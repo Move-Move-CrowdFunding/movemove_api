@@ -17,14 +17,16 @@ function connectSocketIO(server: any, app: any) {
 async function getUnRead({ socket, io, approveUserId = '', token = '' }: any) {
   // const cookie = socket?.handshake?.headers.cookie
   // const token = getCookieVal('userToken', cookie)
-  if (!token) {
+  if (!token || ['null', 'undefined'].includes(token)) {
     return socket.to(socket.id).emit('error', {
       status: 'error',
       msg: '尚未登入'
     })
   }
 
-  const decoded: any = jwt.verify(token.trim(), (process.env as any).JWT_SECRET_KEY)
+  console.log(token)
+
+  const decoded: any = jwt.verify(token, (process.env as any).JWT_SECRET_KEY)
   const userId = approveUserId || decoded.id
 
   socket.join(userId)
