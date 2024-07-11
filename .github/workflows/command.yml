@@ -1,0 +1,25 @@
+name: Run command
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 執行指令 - POST Koyeb reredeploy API
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.KOYEB_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "deployment_group": "prod",
+            "sha": "",
+            "use_cache": false,
+            "skip_build": false
+          }' \
+          -X POST "https://app.koyeb.com/v1/services/${{ secrets.KOYEB_SERVICE_ID }}/redeploy" \
+          -s -o /dev/null -w "%{http_code}"
+          # 只顯示 http status code
