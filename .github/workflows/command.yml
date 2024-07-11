@@ -2,7 +2,7 @@ name: Run command
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   run-script:
